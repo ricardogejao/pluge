@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pluge — App</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="app/pluge-tokens.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: var(--font);
+    background: #050505;
+    background-image: radial-gradient(80% 60% at 50% 0%, #141414 0%, #050505 70%);
+    -webkit-font-smoothing: antialiased;
+  }
+  #stage { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  #scaler { transform-origin: center center; }
+
+  .device { position: relative; width: 393px; height: 852px; flex: none; }
+  .bezel { position: absolute; inset: 0; border-radius: 54px; background: #0A0A0A; overflow: hidden;
+    box-shadow: 0 0 0 11px #161616, 0 0 0 12px #2c2c2c, 0 40px 120px rgba(0,0,0,.6); }
+  .island { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 124px; height: 35px; border-radius: 20px; background: #000; z-index: 60; pointer-events: none; }
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3); z-index: 60; pointer-events: none; }
+
+  .viewport { position: absolute; inset: 0; overflow: hidden; background: #0A0A0A; }
+  .layer { position: absolute; inset: 0; background: #0A0A0A; }
+  .layer iframe { width: 100%; height: 100%; border: 0; display: block; background: #0A0A0A; }
+  /* Airbnb-style easing: decisive out, soft settle */
+  .anim-push, .anim-pop { transition: transform .3s cubic-bezier(.32,.72,0,1); }
+  .anim-fade { transition: opacity .16s ease; }
+  .anim-lift, .anim-drop { transition: transform .32s cubic-bezier(.32,.72,0,1); }
+  .layer.edge { box-shadow: -10px 0 34px rgba(0,0,0,.45); }
+  .layer.edge-top { box-shadow: 0 -12px 38px rgba(0,0,0,.5); }
+  .scrim { position: absolute; inset: 0; background: #000; opacity: 0; z-index: 3; pointer-events: none; }
+  .scrim.anim { transition: opacity .3s cubic-bezier(.32,.72,0,1); }
+
+  /* toast */
+  .toast { position: absolute; left: 50%; top: 76px; transform: translateX(-50%) translateY(-12px);
+    z-index: 70; background: var(--bg-surface); color: #fff; border: 1px solid var(--border);
+    padding: 11px 17px; border-radius: 999px; font-family: var(--font); font-size: 13px; font-weight: 600;
+    box-shadow: var(--shadow-pop); white-space: nowrap; display: flex; align-items: center; gap: 8px;
+    opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s cubic-bezier(.2,0,0,1); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast .tk { width: 18px; height: 18px; border-radius: 50%; background: var(--color-primary);
+    display: flex; align-items: center; justify-content: center; flex: none; }
+
+  /* dark gradient behind the floating nav, to lift it off the content */
+  .nav-scrim { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; z-index: 49; pointer-events: none;
+    background: linear-gradient(180deg, rgba(10,10,10,0) 0%, rgba(10,10,10,.5) 55%, rgba(10,10,10,.82) 100%);
+    opacity: 1; transition: opacity .3s ease; }
+  .nav-scrim.hidden { opacity: 0; }
+  /* persistent bottom nav — Slack-style floating pill, stays fixed while screens slide underneath */
+  .navbar { position: absolute; left: 16px; right: 16px; bottom: 20px; z-index: 50; display: flex;
+    align-items: center; gap: 2px;
+    background: var(--bg-surface); border: 1px solid var(--border); border-radius: 999px;
+    padding: 8px 10px; box-shadow: 0 14px 36px rgba(0,0,0,.6);
+    transition: transform .4s cubic-bezier(.32,.72,0,1), opacity .25s ease; }
+  .navbar.hidden { transform: translateY(180%); opacity: 0; pointer-events: none; }
+
+  /* persistent Airbnb-style view toggle (map ↔ list) — fixed in shell, content slides under it */
+  .viewtoggle { position: absolute; left: 50%; top: 712px; transform: translateX(-50%) translateY(0);
+    z-index: 55; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    background: #1C1C1C; color: #fff; border: 1px solid var(--border);
+    font-family: var(--font); font-size: 14px; font-weight: 600;
+    padding: 12px 20px; border-radius: 999px; box-shadow: 0 10px 28px rgba(0,0,0,.55);
+    transition: transform .12s cubic-bezier(.2,0,0,1), opacity .2s; }
+  .viewtoggle i { font-size: 18px; color: var(--color-primary); }
+  .viewtoggle:active { transform: translateX(-50%) scale(.96); }
+  .viewtoggle.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(8px); }
+  .navbar .item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: var(--text-tertiary); cursor: pointer; font-family: var(--font); border: none; background: none;
+    padding: 8px 4px; border-radius: 999px; }
+  .navbar .item .ico { display: flex; align-items: center; justify-content: center; height: 26px; }
+  .navbar .item.on { color: var(--color-primary); background: var(--fill-primary); }
+  .navbar .item i { font-size: 23px; line-height: 1; }
+  .navbar .item span:last-child { font-size: 10px; font-weight: 500; }
+  .navbar .item.on span:last-child { font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="scaler">
+    <div class="device">
+      <div class="bezel">
+        <div class="viewport" id="viewport"></div>
+        <div class="nav-scrim hidden" id="navScrim"></div>
+        <div class="navbar hidden" id="navbar">
+          <button class="item" data-target="map"><span class="ico"><i class="ti ti-search"></i></span><span>Busca</span></button>
+          <button class="item" data-target="historico"><span class="ico"><i class="ti ti-history"></i></span><span>Histórico</span></button>
+          <button class="item" data-target="session"><span class="ico"><i class="ti ti-bolt"></i></span><span>Sessões</span></button>
+          <button class="item" data-target="profile"><span class="ico"><i class="ti ti-user"></i></span><span>Perfil</span></button>
+        </div>
+        <button class="viewtoggle hidden" id="viewtoggle"></button>
+        <div class="island"></div>
+        <div class="home-indicator"></div>
+        <div class="toast" id="toast"><span class="tk"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></span><span id="toast-msg"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var SCREENS = {
+    splash:     "Pluge Splash.html",
+    map:        "Pluge Mapa e Busca.html",
+    detail:     "Pluge Detalhe Carregador.html",
+    confirm:    "Pluge Confirmar Reserva.html",
+    reserved:   "Pluge Reserva Confirmada.html",
+    checkin:    "Pluge Check-in.html",
+    session:    "Pluge Sessao Ativa.html",
+    payment:    "Pluge Pagamento e Recibo.html",
+    review:     "Pluge Avaliacao.html",
+    list:       "Pluge Lista.html",
+    historico:  "Pluge Historico.html",
+    profile:    "Pluge Perfil.html",
+    addcharger: "Pluge Cadastrar Carregador.html",
+    published:  "Pluge Cadastro Confirmado.html"
+  };
+  var ROOTS = { map: 1, historico: 1, session: 1, profile: 1 };
+  // screens that keep the navbar visible (list belongs to the Busca tab)
+  var NAVBAR_SCREENS = { map: 1, list: 1, historico: 1, session: 1, profile: 1 };
+  // which navbar tab is highlighted for each screen
+  var ACTIVE_TAB = { map: "map", list: "map", historico: "historico", session: "session", profile: "profile" };
+
+  var viewport = document.getElementById("viewport");
+  var toastEl = document.getElementById("toast");
+  var toastMsg = document.getElementById("toast-msg");
+  var navStack = [];
+  var navTrans = [];   // entry transition per stack level (to reverse on back)
+  var current = null; // {id, layer}
+  var animating = false;
+  var layerCache = {}; // one persistent iframe per screen id → no reload on revisit
+
+  function url(id) { return encodeURI(SCREENS[id]) + "?embed=1"; }
+
+  function prepareLayer(layer) {
+    // reset to a clean, visible base state and strip any leftover scrim
+    layer.className = "layer";
+    layer.style.cssText = "";
+    var sc = layer.querySelector(".scrim");
+    if (sc) sc.remove();
+    return layer;
+  }
+
+  function makeLayer(id) {
+    if (layerCache[id]) return prepareLayer(layerCache[id]); // reuse → iframe stays loaded
+    var layer = document.createElement("div");
+    layer.className = "layer";
+    var f = document.createElement("iframe");
+    f.src = url(id);
+    layer.appendChild(f);
+    layerCache[id] = layer;
+    return layer;
+  }
+
+  function addScrim(layer) {
+    var s = document.createElement("div");
+    s.className = "scrim";
+    layer.appendChild(s);
+    return s;
+  }
+
+  function finish(old, incoming, dur, opts) {
+    setTimeout(function () {
+      if (old) { old.layer.style.display = "none"; var os = old.layer.querySelector(".scrim"); if (os) os.remove(); }
+      incoming.className = "layer";
+      incoming.style.cssText = "";
+      var sc = incoming.querySelector(".scrim");
+      if (sc) sc.remove();
+      animating = false;
+      if (opts.toast) toast(opts.toast);
+    }, dur);
+  }
+
+  function show(id, opts) {
+    opts = opts || {};
+    if (animating) return;
+    if (current && current.id === id) { if (opts.toast) toast(opts.toast); return; }
+    var type = opts.type || "push";
+    var incoming = makeLayer(id);
+    incoming.style.display = "";
+    var old = current;
+    updateNavbar(id);
+    current = { id: id, layer: incoming };
+
+    if (!old) { if (incoming.parentNode !== viewport) viewport.appendChild(incoming); return; }
+    animating = true;
+
+    if (type === "fade") {
+      incoming.style.zIndex = 2;
+      incoming.style.opacity = "0";
+      viewport.appendChild(incoming);
+      void incoming.offsetWidth;
+      incoming.classList.add("anim-fade");
+      incoming.style.opacity = "1";
+      finish(old, incoming, 170, opts);
+      return;
+    }
+
+    if (type === "lift") {
+      // list rises up over the map
+      incoming.style.zIndex = 2;
+      incoming.style.transform = "translateY(100%)";
+      incoming.classList.add("edge-top");
+      viewport.appendChild(incoming);
+      void incoming.offsetWidth;
+      incoming.classList.add("anim-lift");
+      incoming.style.transform = "translateY(0)";
+      finish(old, incoming, 330, opts);
+      return;
+    }
+
+    if (type === "drop") {
+      // current screen drops down to reveal the incoming (map) underneath
+      incoming.style.zIndex = 1;
+      incoming.style.transform = "translateY(0)";
+      viewport.insertBefore(incoming, viewport.firstChild);
+      old.layer.style.zIndex = 2;
+      old.layer.classList.add("edge-top");
+      void incoming.offsetWidth;
+      old.layer.classList.add("anim-drop");
+      old.layer.style.transform = "translateY(100%)";
+      finish(old, incoming, 330, opts);
+      return;
+    }
+
+    if (type === "pop") {
+      // previous screen slides back in from the left (parallax), current slides off right
+      incoming.style.zIndex = 1;
+      incoming.style.transform = "translateX(-22%)";
+      viewport.insertBefore(incoming, viewport.firstChild);
+      var sc = addScrim(incoming);
+      sc.style.opacity = ".3";
+      old.layer.style.zIndex = 2;
+      old.layer.classList.add("edge");
+      void incoming.offsetWidth;
+      incoming.classList.add("anim-pop");
+      old.layer.classList.add("anim-pop");
+      sc.classList.add("anim");
+      incoming.style.transform = "translateX(0)";
+      old.layer.style.transform = "translateX(100%)";
+      sc.style.opacity = "0";
+      finish(old, incoming, 300, opts);
+      return;
+    }
+
+    // push (default): incoming from right, old recedes left under a scrim
+    incoming.style.zIndex = 2;
+    incoming.style.transform = "translateX(100%)";
+    incoming.classList.add("edge");
+    viewport.appendChild(incoming);
+    var sc2 = addScrim(old.layer);
+    void incoming.offsetWidth;
+    incoming.classList.add("anim-push");
+    old.layer.classList.add("anim-push");
+    sc2.classList.add("anim");
+    incoming.style.transform = "translateX(0)";
+    old.layer.style.transform = "translateX(-22%)";
+    sc2.style.opacity = ".3";
+    finish(old, incoming, 300, opts);
+  }
+
+  var FADE_TARGETS = { map: 1, historico: 1, profile: 1 };
+  function navigate(target, fromNavbar) {
+    // parse "map|toast:Mensagem"
+    var toastText = null;
+    var bar = target.indexOf("|toast:");
+    if (bar !== -1) { toastText = target.slice(bar + 7); target = target.slice(0, bar); }
+    var from = current ? current.id : null;
+
+    if (target === "back") {
+      if (navStack.length > 1) {
+        var leaving = navTrans.pop();      // how the screen we're leaving was entered
+        navStack.pop();
+        var backType = leaving === "lift" ? "drop" : "pop"; // entered up → exit down
+        show(navStack[navStack.length - 1], { type: backType, toast: toastText });
+      }
+      return;
+    }
+
+    // "up:detail" → modal-style transition from the bottom
+    var upward = false;
+    if (target.indexOf("up:") === 0) { upward = true; target = target.slice(3); }
+
+    // (map ⇆ list now lives inside the map screen as a draggable bottom sheet)
+
+    // navbar tab switches crossfade
+    if (fromNavbar) { navStack = [target]; navTrans = ["fade"]; show(target, { type: "fade", toast: toastText }); return; }
+
+    // in-screen jumps to a tab root ("Ver no mapa", etc.) crossfade
+    if (FADE_TARGETS[target]) { navStack = [target]; navTrans = ["fade"]; show(target, { type: "fade", toast: toastText }); return; }
+
+    // forward flow: push lateral, or rise up for "up:" targets
+    var type = upward ? "lift" : "push";
+    if (ROOTS[target]) { navStack = [target]; navTrans = [type]; }
+    else { navStack.push(target); navTrans.push(type); }
+    show(target, { type: type, toast: toastText });
+  }
+
+  var toastTimer;
+  function toast(msg) {
+    toastMsg.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2400);
+  }
+
+  // persistent navbar: visible on root screens, slides away on the rest
+  var navbar = document.getElementById("navbar");
+  var navItems = [].slice.call(navbar.querySelectorAll(".item"));
+  function updateNavbar(id) {
+    var visible = !!NAVBAR_SCREENS[id];
+    navbar.classList.toggle("hidden", !visible);
+    var scrim = document.getElementById("navScrim");
+    if (scrim) scrim.classList.toggle("hidden", !visible);
+    if (visible) {
+      var tab = ACTIVE_TAB[id];
+      navItems.forEach(function (it) { it.classList.toggle("on", it.getAttribute("data-target") === tab); });
+    }
+    updateViewToggle(id);
+  }
+  navItems.forEach(function (it) {
+    it.addEventListener("click", function () { navigate(it.getAttribute("data-target"), true); });
+  });
+
+  // legacy floating toggle removed — the map screen owns its own map⇆list sheet
+  var viewtoggle = document.getElementById("viewtoggle");
+  function updateViewToggle(id) { if (viewtoggle) viewtoggle.classList.add("hidden"); }
+
+  window.addEventListener("message", function (e) {
+    var d = e.data;
+    if (d && typeof d.plugeNav === "string") navigate(d.plugeNav);
+  });
+
+  // boot
+  navStack = ["splash"]; navTrans = ["fade"];
+  show("splash", { dir: 1 });
+
+  // fit device to viewport
+  var scaler = document.getElementById("scaler");
+  function fit() {
+    var s = Math.min(1, (window.innerHeight - 24) / 852, (window.innerWidth - 24) / 393);
+    scaler.style.transform = "scale(" + s + ")";
+  }
+  fit();
+  window.addEventListener("resize", fit);
+</script>
+</body>
+</html>

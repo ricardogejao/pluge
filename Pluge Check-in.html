@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pluge — Check-in</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="app/pluge-tokens.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { font-family: var(--font); background: #050505; background-image: radial-gradient(80% 60% at 50% 0%, #141414 0%, #050505 70%); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+  #root { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .device-scaler { transform-origin: center center; }
+  .device { position: relative; width: 393px; height: 852px; flex: none; }
+  .device .bezel { position: absolute; inset: 0; border-radius: 54px; background: #0A0A0A; overflow: hidden; box-shadow: 0 0 0 11px #161616, 0 0 0 12px #2c2c2c, 0 40px 120px rgba(0,0,0,.6); }
+  .island { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 124px; height: 35px; border-radius: 20px; background: #000; z-index: 40; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg-primary); }
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3); z-index: 45; }
+  .topbar { flex: none; display: flex; align-items: center; gap: 8px; padding: 58px 18px 8px; }
+  .backbtn { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex: none; cursor: pointer; }
+  .backbtn i { font-size: 22px; color: #fff; }
+  .topbar h1 { font-size: 19px; font-weight: 600; margin: 0; }
+
+  .content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 32px; text-align: center; }
+  .prompt { font-size: 20px; font-weight: 600; letter-spacing: -.3px; }
+  .promptsub { font-size: 14px; color: var(--text-secondary); margin-top: 8px; max-width: 250px; }
+
+  .viewfinder { position: relative; width: 232px; height: 232px; margin: 30px 0 8px; border-radius: 28px; background: #111; overflow: hidden; }
+  .viewfinder .qr { position: absolute; inset: 38px; opacity: .25; }
+  .corner { position: absolute; width: 38px; height: 38px; border: 3px solid var(--color-primary); }
+  .corner.tl { top: 16px; left: 16px; border-right: none; border-bottom: none; border-radius: 12px 0 0 0; }
+  .corner.tr { top: 16px; right: 16px; border-left: none; border-bottom: none; border-radius: 0 12px 0 0; }
+  .corner.bl { bottom: 16px; left: 16px; border-right: none; border-top: none; border-radius: 0 0 0 12px; }
+  .corner.br { bottom: 16px; right: 16px; border-left: none; border-top: none; border-radius: 0 0 12px 0; }
+  .scanline { position: absolute; left: 16px; right: 16px; height: 2px; background: linear-gradient(90deg, transparent, var(--color-primary), transparent); box-shadow: 0 0 12px 2px rgba(0,212,106,.5); top: 24px; }
+  @media (prefers-reduced-motion: no-preference) { .scanline { animation: scan 2.2s ease-in-out infinite; } }
+  @keyframes scan { 0% { top: 26px; } 50% { top: 204px; } 100% { top: 26px; } }
+
+  .plug-label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-top: 6px; background: var(--bg-surface); border: 1px solid var(--border); padding: 9px 14px; border-radius: 999px; }
+  .plug-label i { font-size: 16px; color: var(--color-primary); }
+
+  .footer { flex: none; padding: 14px 22px 24px; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="device-scaler" id="scaler">
+    <div class="device">
+      <div class="bezel">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="topbar">
+            <button class="backbtn" data-nav="back"><i class="ti ti-chevron-left"></i></button>
+            <h1>Check-in</h1>
+          </div>
+          <div class="content">
+            <div class="prompt">Aponte para o QR do carregador</div>
+            <div class="promptsub">O código fica na placa verde Pluge, ao lado da tomada.</div>
+            <div class="viewfinder">
+              <svg class="qr" viewBox="0 0 100 100" shape-rendering="crispEdges"><rect width="100" height="100" fill="#fff"></rect><g fill="#0A0A0A"><rect x="6" y="6" width="22" height="22"></rect><rect x="72" y="6" width="22" height="22"></rect><rect x="6" y="72" width="22" height="22"></rect></g><g fill="#fff"><rect x="10" y="10" width="14" height="14"></rect><rect x="76" y="10" width="14" height="14"></rect><rect x="10" y="76" width="14" height="14"></rect></g><g fill="#0A0A0A"><rect x="13" y="13" width="8" height="8"></rect><rect x="79" y="13" width="8" height="8"></rect><rect x="13" y="79" width="8" height="8"></rect><rect x="40" y="40" width="6" height="6"></rect><rect x="54" y="40" width="6" height="6"></rect><rect x="40" y="54" width="6" height="6"></rect><rect x="60" y="60" width="6" height="6"></rect><rect x="48" y="64" width="6" height="6"></rect></g></svg>
+              <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+              <div class="scanline"></div>
+            </div>
+            <div class="plug-label"><i class="ti ti-plug"></i>Plug #RO-247 · Cambuí</div>
+          </div>
+          <div class="footer">
+            <button class="btn btn-primary btn-block btn-lg" data-nav="session"><i class="ti ti-qrcode"></i>Escanear QR code</button>
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var scaler = document.getElementById("scaler");
+    function fit() { var s = Math.min(1, (window.innerHeight - 24) / 852, (window.innerWidth - 24) / 393); scaler.style.transform = "scale(" + s + ")"; }
+    fit(); window.addEventListener("resize", fit);
+  })();
+</script>
+<script src="app/embed.js"></script>
+</body>
+</html>

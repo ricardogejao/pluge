@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pluge — Pagamento concluído</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="app/pluge-tokens.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: var(--font);
+    background: #050505;
+    background-image: radial-gradient(80% 60% at 50% 0%, #141414 0%, #050505 70%);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  #root { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .device-scaler { transform-origin: center center; }
+
+  /* iPhone 14 Pro frame */
+  .device { position: relative; width: 393px; height: 852px; flex: none; }
+  .device .bezel {
+    position: absolute; inset: 0; border-radius: 54px; background: #0A0A0A;
+    overflow: hidden; box-shadow: 0 0 0 11px #161616, 0 0 0 12px #2c2c2c, 0 40px 120px rgba(0,0,0,.6);
+  }
+  .island { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 124px; height: 35px; border-radius: 20px; background: #000; z-index: 40; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg-primary); }
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3); z-index: 45; }
+
+  .statusbar { height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 30px 0 34px; z-index: 20; }
+  .statusbar .time { font-size: 15px; font-weight: 600; }
+  .statusbar .icons { display: flex; gap: 7px; align-items: center; }
+
+  .content { flex: 1; overflow-y: auto; padding: 6px 22px 16px; }
+  .content::-webkit-scrollbar { display: none; }
+
+  /* check success */
+  .check-wrap { display: flex; justify-content: center; padding: 14px 0 0; }
+  .check-ring { width: 84px; height: 84px; border-radius: 50%; background: var(--color-primary);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 9px var(--fill-primary), 0 12px 32px rgba(0,212,106,.32); }
+  @media (prefers-reduced-motion: no-preference) { .check-ring { animation: pop .5s cubic-bezier(.2,0,0,1); } }
+  @keyframes pop { 0% { transform: scale(.75); } 60% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+  h1.title { font-size: 25px; font-weight: 700; letter-spacing: -.6px; text-align: center; margin: 20px 0 0; }
+  .subtitle { text-align: center; color: var(--text-secondary); font-size: 14px; margin-top: 7px;
+    display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .subtitle i { color: var(--color-primary); font-size: 16px; }
+
+  /* receipt */
+  .receipt { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px; margin-top: 24px; }
+  .receipt .ovl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--text-tertiary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .receipt .ovl::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  .line { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 7px 0; }
+  .line .k { font-size: 14px; color: var(--text-secondary); white-space: nowrap; }
+  .line .v { font-size: 14px; font-weight: 500; color: #fff; text-align: right; white-space: nowrap; }
+
+  .div-thick { height: 1px; background: var(--bg-surface-2); margin: 14px 0; }
+  .div-thin { height: 1px; background: var(--border); margin: 12px 0; }
+
+  .total-line { display: flex; align-items: baseline; justify-content: space-between; }
+  .total-line .k { font-size: 15px; font-weight: 600; color: #fff; }
+  .total-line .v { font-size: 20px; font-weight: 700; letter-spacing: -.4px; color: #fff; font-variant-numeric: tabular-nums; }
+
+  .split { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 5px 0; }
+  .split .k { font-size: 13px; color: var(--text-secondary); }
+  .split .v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; flex: none; }
+  .split .v.accent { color: var(--color-primary); }
+  .split .v.muted { color: var(--text-secondary); font-weight: 500; }
+
+  .footer { flex: none; padding: 14px 22px 24px; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="device-scaler" id="scaler">
+    <div class="device">
+      <div class="bezel">
+        <div class="island"></div>
+        <div class="screen">
+
+          <div class="statusbar">
+            <span class="time">15:01</span>
+            <span class="icons">
+              <i class="ti ti-signal-4g" style="font-size:17px"></i>
+              <i class="ti ti-wifi" style="font-size:17px"></i>
+              <i class="ti ti-battery-3" style="font-size:20px"></i>
+            </span>
+          </div>
+
+          <div class="content">
+
+            <div class="check-wrap">
+              <div class="check-ring">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+              </div>
+            </div>
+            <h1 class="title">Pagamento concluído</h1>
+            <div class="subtitle"><i class="ti ti-circle-check-filled"></i>Pix debitado · 15:01</div>
+
+            <!-- Receipt -->
+            <div class="receipt">
+              <div class="ovl">Recibo da sessão</div>
+
+              <div class="line"><span class="k">Driver</span><span class="v">Lucas Trevisan</span></div>
+              <div class="line"><span class="k">Host</span><span class="v">Renata Oliveira</span></div>
+              <div class="line"><span class="k">Local</span><span class="v">Cambuí · Campinas</span></div>
+              <div class="line"><span class="k">Duração</span><span class="v">4h 38min</span></div>
+              <div class="line"><span class="k">kWh carregados</span><span class="v">34,2 kWh</span></div>
+              <div class="line"><span class="k">Preço</span><span class="v">R$ 1,20/kWh</span></div>
+
+              <div class="div-thick"></div>
+
+              <div class="total-line"><span class="k">Total pago</span><span class="v">R$ 41,04</span></div>
+
+              <div class="div-thin"></div>
+
+              <div class="split"><span class="k">Renata recebe (D+1)</span><span class="v accent">R$ 32,83</span></div>
+              <div class="split"><span class="k">Pluge (20%)</span><span class="v muted">R$ 8,21</span></div>
+            </div>
+
+          </div>
+
+          <!-- Footer -->
+          <div class="footer">
+            <button class="btn btn-primary btn-block btn-lg" data-nav="review"><i class="ti ti-star"></i>Avaliar experiência</button>
+          </div>
+
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var scaler = document.getElementById("scaler");
+    function fit() {
+      var s = Math.min(1, (window.innerHeight - 24) / 852, (window.innerWidth - 24) / 393);
+      scaler.style.transform = "scale(" + s + ")";
+    }
+    fit();
+    window.addEventListener("resize", fit);
+  })();
+</script>
+<script src="app/embed.js"></script>
+</body>
+</html>

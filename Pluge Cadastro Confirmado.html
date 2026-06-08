@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pluge — Carregador publicado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="app/pluge-tokens.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: var(--font);
+    background: #050505;
+    background-image: radial-gradient(80% 60% at 50% 0%, #141414 0%, #050505 70%);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #root { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .device-scaler { transform-origin: center center; }
+
+  /* iPhone 14 Pro frame */
+  .device { position: relative; width: 393px; height: 852px; flex: none; }
+  .device .bezel {
+    position: absolute; inset: 0; border-radius: 54px; background: #0A0A0A;
+    overflow: hidden; box-shadow: 0 0 0 11px #161616, 0 0 0 12px #2c2c2c, 0 40px 120px rgba(0,0,0,.6);
+  }
+  .island {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 124px; height: 35px; border-radius: 20px; background: #000; z-index: 30;
+  }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; }
+
+  .statusbar {
+    height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 30px 0 34px; z-index: 20;
+  }
+  .statusbar .time { font-size: 15px; font-weight: 600; }
+  .statusbar .icons { display: flex; gap: 7px; align-items: center; }
+
+  .content { flex: 1; overflow-y: auto; padding: 8px 22px 16px; }
+  .content::-webkit-scrollbar { display: none; }
+
+  /* success ring */
+  .check-wrap { display: flex; flex-direction: column; align-items: center; padding: 18px 0 6px; }
+  .check-ring {
+    width: 92px; height: 92px; border-radius: 50%; background: var(--color-primary);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 10px var(--fill-primary), 0 12px 36px rgba(0,212,106,.35);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .check-ring { animation: pop .5s cubic-bezier(.2,0,0,1); }
+  }
+  @keyframes pop { 0% { transform: scale(.7); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
+  .check-ring i { font-size: 50px; color: #000; }
+
+  h1.title { font-size: 26px; font-weight: 700; letter-spacing: -.6px; text-align: center; margin: 22px 0 0; }
+  .subtitle { text-align: center; color: var(--text-secondary); font-size: 15px; margin-top: 7px;
+    display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .subtitle i { color: var(--color-primary); font-size: 17px; }
+
+  .card {
+    background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 18px; margin-top: 16px;
+  }
+
+  .summary-head { display: flex; align-items: center; gap: 12px; }
+  .summary-head .meta { flex: 1; min-width: 0; }
+  .summary-head .name { font-size: 17px; font-weight: 600; }
+  .summary-head .addr { font-size: 13px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; }
+
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  .kv { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 14px; }
+  .kv i { font-size: 18px; color: var(--text-tertiary); }
+
+  .price-row { display: flex; align-items: baseline; justify-content: space-between; margin-top: 16px; }
+  .price-row .lbl { font-size: 13px; color: var(--text-secondary); }
+  .price-val { font-weight: 700; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+
+  /* projection card */
+  .proj-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: var(--text-tertiary);
+    display: flex; align-items: center; gap: 7px; }
+  .proj-label i { font-size: 15px; color: var(--color-primary); }
+  .proj-val { font-size: 30px; font-weight: 700; letter-spacing: -1px; color: var(--color-primary); margin-top: 12px;
+    font-variant-numeric: tabular-nums; }
+  .proj-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+  .proj-bars { display: flex; align-items: flex-end; gap: 5px; height: 46px; margin-top: 16px; }
+  .proj-bars span { flex: 1; border-radius: 4px 4px 0 0; background: var(--bg-surface-2); }
+  .proj-bars span.on { background: var(--color-primary); }
+
+  .actions { padding: 14px 22px 10px; display: flex; flex-direction: column; gap: 10px; flex: none; }
+
+  /* bottom nav */
+  .bottomnav { display: flex; border-top: 1px solid var(--border); background: var(--bg-primary);
+    padding: 9px 0 26px; flex: none; }
+  .bottomnav .item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--text-tertiary); }
+  .bottomnav .item i { font-size: 24px; }
+  .bottomnav .item span { font-size: 10px; font-weight: 500; }
+  .bottomnav .item.on { color: var(--color-primary); }
+  .bottomnav .item.on span { font-weight: 600; }
+
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3); z-index: 25; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="device-scaler" id="scaler">
+  <div class="device">
+    <div class="bezel">
+      <div class="island"></div>
+      <div class="screen">
+
+        <div class="statusbar">
+          <span class="time">9:41</span>
+          <span class="icons">
+            <i class="ti ti-signal-4g" style="font-size:17px"></i>
+            <i class="ti ti-wifi" style="font-size:17px"></i>
+            <i class="ti ti-battery-3" style="font-size:20px"></i>
+          </span>
+        </div>
+
+        <div class="content">
+
+          <div class="check-wrap">
+            <div class="check-ring">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+            </div>
+          </div>
+          <h1 class="title">Carregador publicado!</h1>
+          <div class="subtitle"><i class="ti ti-map-pin-filled"></i>Já aparece no mapa do Pluge</div>
+
+          <!-- Summary card -->
+          <div class="card">
+            <div class="summary-head">
+              <div style="position:relative;width:48px;height:48px;flex:none">
+                <div style="width:48px;height:48px;border-radius:50%;background:var(--bg-surface-2);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:19px">R</div>
+                <div style="position:absolute;right:-2px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:var(--color-primary);display:flex;align-items:center;justify-content:center;border:2px solid var(--bg-surface)"><i class="ti ti-check" style="font-size:12px;color:#000"></i></div>
+              </div>
+              <div class="meta">
+                <div class="name">Renata Oliveira</div>
+                <div class="addr">Av. José de Souza Campos, 1.247 — Cambuí, Campinas</div>
+              </div>
+              <span class="badge badge-available">Ativo</span>
+            </div>
+
+            <div class="badge-row">
+              <span class="badge badge-plug"><i class="ti ti-plug"></i>Tipo 2</span>
+              <span class="badge badge-plug"><i class="ti ti-bolt"></i>7,4 kW</span>
+              <span class="badge badge-plug"><i class="ti ti-car-garage"></i>Garagem coberta</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="kv"><i class="ti ti-calendar-week"></i>Seg–Sex · 08:00–18:00</div>
+
+            <div class="price-row">
+              <span class="lbl">Preço por kWh</span>
+              <span class="price-val" style="font-size:26px;color:var(--color-primary)">R$ 1,20<span style="font-size:14px;font-weight:500;color:var(--text-secondary)"> /kWh</span></span>
+            </div>
+          </div>
+
+          <!-- Projection card -->
+          <div class="card">
+            <div class="proj-label"><i class="ti ti-trending-up"></i>Projeção de ganhos mensais</div>
+            <div class="proj-val">R$ 320 – R$ 540</div>
+            <div class="proj-sub">com 8–12 sessões por mês</div>
+            <div class="proj-bars">
+              <span style="height:40%"></span><span style="height:55%"></span><span class="on" style="height:70%"></span>
+              <span class="on" style="height:62%"></span><span class="on" style="height:85%"></span><span style="height:50%"></span>
+              <span style="height:68%"></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button class="btn btn-primary btn-block btn-lg" data-nav="map"><i class="ti ti-map"></i>Ver no mapa</button>
+          <button class="btn btn-secondary btn-block" data-nav="map">Editar carregador</button>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="bottomnav">
+          <div class="item on"><i class="ti ti-map"></i><span>Mapa</span></div>
+          <div class="item"><i class="ti ti-list"></i><span>Lista</span></div>
+          <div class="item"><i class="ti ti-bolt"></i><span>Sessões</span></div>
+          <div class="item"><i class="ti ti-user"></i><span>Perfil</span></div>
+        </div>
+
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var scaler = document.getElementById("scaler");
+    function fit() {
+      var s = Math.min(1, (window.innerHeight - 24) / 852, (window.innerWidth - 24) / 393);
+      scaler.style.transform = "scale(" + s + ")";
+    }
+    fit();
+    window.addEventListener("resize", fit);
+  })();
+</script>
+<script src="app/embed.js"></script>
+</body>
+</html>

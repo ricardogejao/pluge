@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pluge — Sessão ativa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="app/pluge-tokens.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: var(--font);
+    background: #050505;
+    background-image: radial-gradient(80% 60% at 50% 0%, #141414 0%, #050505 70%);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  #root { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .device-scaler { transform-origin: center center; }
+
+  /* iPhone 14 Pro frame */
+  .device { position: relative; width: 393px; height: 852px; flex: none; }
+  .device .bezel {
+    position: absolute; inset: 0; border-radius: 54px; background: #0A0A0A;
+    overflow: hidden; box-shadow: 0 0 0 11px #161616, 0 0 0 12px #2c2c2c, 0 40px 120px rgba(0,0,0,.6);
+  }
+  .island { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 124px; height: 35px; border-radius: 20px; background: #000; z-index: 40; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg-primary); }
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3); z-index: 45; }
+
+  .statusbar { height: 54px; flex: none; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 30px 0 34px; z-index: 20; }
+  .statusbar .time { font-size: 15px; font-weight: 600; }
+  .statusbar .icons { display: flex; gap: 7px; align-items: center; }
+
+  .content { flex: 1; overflow-y: auto; padding: 8px 22px 16px; display: flex; flex-direction: column; }
+  .content::-webkit-scrollbar { display: none; }
+
+  /* live pill */
+  .live { align-self: center; display: inline-flex; align-items: center; gap: 8px;
+    background: var(--fill-primary); color: var(--color-primary); font-size: 12px; font-weight: 600;
+    letter-spacing: .03em; padding: 7px 14px; border-radius: 999px; margin-top: 4px; }
+  .live .dot { position: relative; width: 8px; height: 8px; }
+  .live .dot .core { position: absolute; inset: 0; border-radius: 50%; background: var(--color-primary); }
+  .live .dot .ring { position: absolute; inset: 0; border-radius: 50%; background: var(--color-primary); }
+  @media (prefers-reduced-motion: no-preference) { .live .dot .ring { animation: ping 1.6s cubic-bezier(0,0,.2,1) infinite; } }
+  @keyframes ping { 0% { transform: scale(1); opacity: .7; } 80%, 100% { transform: scale(2.8); opacity: 0; } }
+
+  .subtitle { text-align: center; color: var(--text-secondary); font-size: 15px; margin-top: 14px; }
+
+  /* progress ring */
+  .ring-wrap { display: flex; justify-content: center; margin: 18px 0 6px; position: relative; }
+  .ring-wrap .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-wrap .pct { font-size: 56px; font-weight: 700; letter-spacing: -2px; color: #fff; line-height: 1;
+    font-variant-numeric: tabular-nums; }
+  .ring-wrap .pct span { font-size: 26px; }
+  .ring-wrap .cap { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+  .ring-bolt { margin-bottom: 8px; }
+  /* charging arc: soft green glow + discreet pulse */
+  .prog { filter: drop-shadow(0 0 5px rgba(0,212,106,.5)); }
+  @media (prefers-reduced-motion: no-preference) {
+    .prog { animation: chargePulse 1.9s ease-in-out infinite; }
+    .ring-bolt { animation: boltPulse 1.9s ease-in-out infinite; }
+  }
+  @keyframes chargePulse {
+    0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px rgba(0,212,106,.45)); }
+    50% { opacity: .62; filter: drop-shadow(0 0 10px rgba(0,212,106,.8)); }
+  }
+  @keyframes boltPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.92); } }
+
+  /* metric grid */
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 22px; }
+  .metric { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 16px 10px; text-align: center; }
+  .metric .val { font-size: 21px; font-weight: 700; letter-spacing: -.5px; color: #fff; font-variant-numeric: tabular-nums; }
+  .metric .val.accent { color: var(--color-primary); }
+  .metric .lbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--text-tertiary); margin-top: 7px; }
+
+  /* context card */
+  .context { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 16px 18px; margin-top: 12px; display: flex; align-items: center; gap: 13px; }
+  .context .av { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-surface-2); flex: none;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: #fff; }
+  .context .who .k { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: var(--text-tertiary); }
+  .context .who .name { font-size: 16px; font-weight: 600; color: #fff; margin-top: 3px; }
+  .context .who .sub { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+  .context .eta { margin-left: auto; text-align: right; }
+  .context .eta .k { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: var(--text-tertiary); }
+  .context .eta .t { font-size: 17px; font-weight: 600; color: #fff; margin-top: 5px; font-variant-numeric: tabular-nums; }
+
+  /* footer */
+  .footer { flex: none; padding: 14px 22px 88px; }
+  .btn-danger { width: 100%; background: transparent; color: var(--color-error);
+    box-shadow: inset 0 0 0 1px rgba(255,69,58,.27); }
+  .btn-danger:hover { background: rgba(255,69,58,.08); }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="device-scaler" id="scaler">
+    <div class="device">
+      <div class="bezel">
+        <div class="island"></div>
+        <div class="screen">
+
+          <div class="statusbar">
+            <span class="time">11:35</span>
+            <span class="icons">
+              <i class="ti ti-signal-4g" style="font-size:17px"></i>
+              <i class="ti ti-wifi" style="font-size:17px"></i>
+              <i class="ti ti-battery-3" style="font-size:20px"></i>
+            </span>
+          </div>
+
+          <div class="content">
+
+            <div class="live">
+              <span class="dot"><span class="ring"></span><span class="core"></span></span>
+              CARREGANDO
+            </div>
+            <div class="subtitle">Sessão em andamento</div>
+
+            <!-- Progress ring -->
+            <div class="ring-wrap">
+              <svg width="232" height="232" viewBox="0 0 232 232">
+                <circle cx="116" cy="116" r="100" fill="none" stroke="#2A2A2A" stroke-width="16"></circle>
+                <circle class="prog" cx="116" cy="116" r="100" fill="none" stroke="#00D46A" stroke-width="16"
+                  stroke-linecap="round" stroke-dasharray="628.3"
+                  stroke-dashoffset="201.06" transform="rotate(-90 116 116)"></circle>
+              </svg>
+              <div class="center">
+                <svg class="ring-bolt" width="24" height="24" viewBox="0 0 24 24" fill="#00D46A"><path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12z"></path></svg>
+                <div class="pct">68<span>%</span></div>
+                <div class="cap">bateria</div>
+              </div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="metrics">
+              <div class="metric"><div class="val">30,5</div><div class="lbl">kWh</div></div>
+              <div class="metric"><div class="val">4h12</div><div class="lbl">tempo</div></div>
+              <div class="metric"><div class="val accent">R$ 36</div><div class="lbl">acumulado</div></div>
+            </div>
+
+            <!-- Context -->
+            <div class="context">
+              <div class="av">R</div>
+              <div class="who">
+                <div class="k">Host</div>
+                <div class="name">Renata Oliveira</div>
+                <div class="sub">Cambuí · Tipo 2 · 7,4 kW</div>
+              </div>
+              <div class="eta">
+                <div class="k">Previsão fim</div>
+                <div class="t">~15:47</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Footer -->
+          <div class="footer">
+            <button class="btn btn-danger btn-lg" data-nav="payment"><i class="ti ti-player-stop-filled"></i>Encerrar sessão agora</button>
+          </div>
+
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var scaler = document.getElementById("scaler");
+    function fit() {
+      var s = Math.min(1, (window.innerHeight - 24) / 852, (window.innerWidth - 24) / 393);
+      scaler.style.transform = "scale(" + s + ")";
+    }
+    fit();
+    window.addEventListener("resize", fit);
+  })();
+</script>
+<script>
+  /* Fill the progress arc from empty up to its current value each time the screen mounts */
+  (function () {
+    var prog = document.querySelector(".prog");
+    if (!prog || !prog.animate) return;
+    if (!window.matchMedia || !matchMedia("(prefers-reduced-motion: no-preference)").matches) return;
+    var FULL = 628.3;
+    var target = parseFloat(prog.getAttribute("stroke-dashoffset")) || FULL;
+    prog.animate(
+      [{ strokeDashoffset: FULL }, { strokeDashoffset: target }],
+      { duration: 1150, easing: "cubic-bezier(.32,.72,0,1)" }
+    );
+  })();
+</script>
+<script src="app/embed.js"></script>
+</body>
+</html>

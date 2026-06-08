@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pluge — Histórico</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="app/pluge-tokens.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { font-family: var(--font); background: #050505; background-image: radial-gradient(80% 60% at 50% 0%, #141414 0%, #050505 70%); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+  #root { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .device-scaler { transform-origin: center center; }
+  .device { position: relative; width: 393px; height: 852px; flex: none; }
+  .device .bezel { position: absolute; inset: 0; border-radius: 54px; background: #0A0A0A; overflow: hidden; box-shadow: 0 0 0 11px #161616, 0 0 0 12px #2c2c2c, 0 40px 120px rgba(0,0,0,.6); }
+  .island { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 124px; height: 35px; border-radius: 20px; background: #000; z-index: 40; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg-primary); }
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3); z-index: 45; }
+
+  .head { padding: 56px 18px 12px; }
+  .head h1 { font-size: 26px; font-weight: 700; letter-spacing: -.7px; margin: 0; }
+  .head .sub { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+  .summary { display: flex; gap: 10px; margin-top: 16px; }
+  .stat { flex: 1; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 13px 12px; }
+  .stat .v { font-size: 18px; font-weight: 700; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
+  .stat .v.accent { color: var(--color-primary); }
+  .stat .v.kwh-accent { color: var(--color-tertiary); }
+  .stat .k { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: var(--text-tertiary); margin-top: 6px; }
+
+  .list { flex: 1; overflow-y: auto; padding: 8px 18px 14px; }
+  .list::-webkit-scrollbar { display: none; }
+  .daylbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: var(--text-tertiary); margin: 14px 2px 10px; }
+  .sess { display: flex; align-items: center; gap: 13px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; }
+  .sess .av { width: 42px; height: 42px; border-radius: 50%; background: var(--bg-surface-2); flex: none; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; }
+  .sess .mid { flex: 1; min-width: 0; }
+  .sess .nm { font-size: 15px; font-weight: 600; }
+  .sess .meta { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+  .sess .right { text-align: right; flex: none; }
+  .sess .cost { font-size: 15px; font-weight: 700; letter-spacing: -.3px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sess .kwh { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+
+  .bottomnav { display: flex; border-top: 1px solid var(--border); background: var(--bg-primary); padding: 9px 0 26px; flex: none; }
+  .bottomnav .item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-tertiary); cursor: pointer; }
+  .bottomnav .item i { font-size: 24px; }
+  .bottomnav .item span { font-size: 10px; font-weight: 500; }
+  .bottomnav .item.on { color: var(--color-primary); }
+  .bottomnav .item.on span { font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="device-scaler" id="scaler">
+    <div class="device">
+      <div class="bezel">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="head">
+            <h1>Histórico</h1>
+            <div class="sub">Suas sessões de recarga</div>
+            <div class="summary">
+              <div class="stat"><div class="v">23</div><div class="k">Sessões</div></div>
+              <div class="stat"><div class="v kwh-accent">612</div><div class="k">kWh</div></div>
+              <div class="stat"><div class="v accent">R$ 0,9k</div><div class="k">Gasto</div></div>
+            </div>
+          </div>
+          <div class="list">
+            <div class="daylbl">Junho 2026</div>
+            <div class="sess">
+              <div class="av">R</div>
+              <div class="mid"><div class="nm">Renata Oliveira</div><div class="meta">12 jun · Cambuí · Tipo 2</div></div>
+              <div class="right"><div class="cost">R$ 41,04</div><div class="kwh">34,2 kWh</div></div>
+            </div>
+            <div class="sess">
+              <div class="av">F</div>
+              <div class="mid"><div class="nm">Fábio Mendes</div><div class="meta">5 jun · Barão Geraldo · CCS</div></div>
+              <div class="right"><div class="cost">R$ 88,80</div><div class="kwh">48,0 kWh</div></div>
+            </div>
+            <div class="daylbl">Maio 2026</div>
+            <div class="sess">
+              <div class="av">D</div>
+              <div class="mid"><div class="nm">Diego Martins</div><div class="meta">28 mai · Itaim · CHAdeMO</div></div>
+              <div class="right"><div class="cost">R$ 55,65</div><div class="kwh">26,5 kWh</div></div>
+            </div>
+            <div class="sess">
+              <div class="av">L</div>
+              <div class="mid"><div class="nm">Letícia Souza</div><div class="meta">19 mai · Sumaré · Tipo 2</div></div>
+              <div class="right"><div class="cost">R$ 28,60</div><div class="kwh">26,0 kWh</div></div>
+            </div>
+            <div class="sess">
+              <div class="av">R</div>
+              <div class="mid"><div class="nm">Renata Oliveira</div><div class="meta">11 mai · Cambuí · Tipo 2</div></div>
+              <div class="right"><div class="cost">R$ 37,20</div><div class="kwh">31,0 kWh</div></div>
+            </div>
+          </div>
+          <div class="bottomnav">
+            <div class="item" data-nav="map"><i class="ti ti-search"></i><span>Busca</span></div>
+            <div class="item on" data-nav="historico"><i class="ti ti-history"></i><span>Histórico</span></div>
+            <div class="item" data-nav="session"><i class="ti ti-bolt"></i><span>Sessões</span></div>
+            <div class="item" data-nav="profile"><i class="ti ti-user"></i><span>Perfil</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var scaler = document.getElementById("scaler");
+    function fit() { var s = Math.min(1, (window.innerHeight - 24) / 852, (window.innerWidth - 24) / 393); scaler.style.transform = "scale(" + s + ")"; }
+    fit(); window.addEventListener("resize", fit);
+  })();
+</script>
+<script src="app/embed.js"></script>
+</body>
+</html>

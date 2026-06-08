@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pluge — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="app/pluge-tokens.css" />
+<style>
+  html, body { margin: 0; }
+  body { font-family: var(--font); background: var(--bg-primary); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px 120px; }
+  .ti { line-height: 1; }
+
+  /* hero */
+  header.hero { padding: 80px 0 48px; border-bottom: 1px solid var(--border); }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-mark { width: 44px; height: 44px; border-radius: 12px; background: var(--color-primary); display: flex; align-items: center; justify-content: center; }
+  .logo-name { font-size: 30px; font-weight: 700; letter-spacing: -1.2px; }
+  .hero p { color: var(--text-secondary); font-size: 17px; max-width: 560px; margin: 24px 0 0; line-height: 1.5; }
+  .hero .tags { display: flex; gap: 8px; margin-top: 24px; flex-wrap: wrap; }
+  .hero .tags span { font-size: 12px; font-weight: 500; color: var(--text-secondary); border: 1px solid var(--border); padding: 7px 13px; border-radius: 999px; white-space: nowrap; }
+
+  /* section */
+  section { padding-top: 64px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 28px; }
+  .sec-num { font-size: 12px; font-weight: 700; color: var(--color-primary); letter-spacing: 0.1em; }
+  .sec-head h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; margin: 0; }
+  .sec-head .desc { color: var(--text-tertiary); font-size: 13px; margin-left: auto; }
+  .sub { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); margin: 32px 0 16px; }
+
+  /* color grid */
+  .colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .swatch { border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); background: var(--bg-surface); }
+  .swatch .chip { height: 86px; }
+  .swatch .meta { padding: 12px 14px; }
+  .swatch .nm { font-size: 13px; font-weight: 600; }
+  .swatch .hex { font-size: 12px; color: var(--text-secondary); margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .swatch .role { font-size: 11px; color: var(--text-tertiary); margin-top: 6px; line-height: 1.35; }
+
+  /* type rows */
+  .typerow { display: flex; align-items: baseline; gap: 24px; padding: 18px 0; border-bottom: 1px solid var(--border); }
+  .typerow .label { width: 150px; flex: none; color: var(--text-tertiary); font-size: 12px; }
+  .typerow .label b { display: block; color: var(--text-secondary); font-size: 13px; font-weight: 600; margin-bottom: 2px; text-transform: none; letter-spacing: 0; }
+  .typerow .spec { width: 200px; flex: none; color: var(--text-tertiary); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+  /* spacing + radius */
+  .spacing { display: flex; align-items: flex-end; gap: 18px; }
+  .spacing .unit { text-align: center; }
+  .spacing .bar { background: var(--color-primary); border-radius: 3px; width: 100%; }
+  .spacing .unit .v { font-size: 12px; color: var(--text-secondary); margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .radii { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .radii .r { background: var(--bg-surface); border: 1px solid var(--border); display: flex; align-items: flex-end; justify-content: center; height: 96px; position: relative; }
+  .radii .r .demo { position: absolute; inset: 14px; border: 2px solid var(--color-primary); background: var(--fill-primary); }
+  .radii .cap { text-align: center; margin-top: 10px; font-size: 12px; color: var(--text-secondary); }
+  .radii .cap b { display: block; color: #fff; font-size: 13px; }
+
+  /* component gallery */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; align-items: start; }
+  .panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; }
+  .panel .ttl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); margin-bottom: 18px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .frame-bg { background: var(--bg-primary); border-radius: var(--radius-md); padding: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="logo">
+      <span class="logo-mark"><i class="ti ti-bolt" style="font-size:26px;color:#000"></i></span>
+      <span class="logo-name">Pluge</span>
+    </div>
+    <p>Design system do marketplace P2P de recarga de veículos elétricos. Donos de carregadores (Hosts) disponibilizam tomadas para motoristas reservarem e pagarem. Dark-first, funcional e direto.</p>
+    <div class="tags">
+      <span>Dark first</span><span>Inter</span><span>Base 4px</span><span>Tabler Icons</span><span>Uber × Airbnb</span>
+    </div>
+    <a href="Pluge Prototype.html" style="display:inline-flex;align-items:center;gap:8px;margin-top:28px;text-decoration:none" class="btn btn-primary"><i class="ti ti-device-mobile"></i>Abrir protótipo interativo</a>
+  </header>
+
+  <!-- COLORS -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Cores</h2><span class="desc">Uma única cor de ação. Whites e cinzas dominam.</span></div>
+    <div class="sub">Superfícies</div>
+    <div class="colors" id="surfaces"></div>
+    <div class="sub">Ação e status</div>
+    <div class="colors" id="action"></div>
+    <div class="sub">Texto e linhas</div>
+    <div class="colors" id="text"></div>
+  </section>
+
+  <!-- TYPE -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Tipografia</h2><span class="desc">Inter · peso pesado só para números e valores</span></div>
+    <div id="type"></div>
+  </section>
+
+  <!-- SPACING -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Espaçamento e raio</h2><span class="desc">Escala base 4px</span></div>
+    <div class="sub">Espaçamento</div>
+    <div class="spacing" id="spacing" style="height:120px"></div>
+    <div class="sub" style="margin-top:44px">Border radius</div>
+    <div class="radii" id="radii"></div>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Componentes</h2><span class="desc">Blocos de construção do app</span></div>
+    <div class="gallery">
+
+      <div class="panel">
+        <div class="ttl">Botões</div>
+        <div class="stack">
+          <button class="btn btn-primary"><i class="ti ti-bolt"></i>Reservar agora</button>
+          <button class="btn btn-secondary">Ver detalhes</button>
+          <button class="btn btn-urgent"><i class="ti ti-bolt"></i>Modo emergência</button>
+          <button class="btn btn-disabled">Indisponível</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ttl">Badges de estado</div>
+        <div class="row" style="margin-bottom:14px">
+          <span class="badge badge-available">Disponível</span>
+          <span class="badge badge-busy">Ocupado</span>
+          <span class="badge badge-reserved">Reservado</span>
+          <span class="badge badge-charging"><i class="ti ti-bolt"></i>Carregando</span>
+        </div>
+        <div class="ttl" style="margin:18px 0 12px">Tipo de plug</div>
+        <div class="row">
+          <span class="badge badge-plug"><i class="ti ti-plug"></i>Tipo 2</span>
+          <span class="badge badge-plug"><i class="ti ti-plug"></i>CCS</span>
+          <span class="badge badge-plug"><i class="ti ti-plug"></i>CHAdeMO</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ttl">Input de busca</div>
+        <div class="frame-bg">
+          <div class="input">
+            <i class="ti ti-search"></i>
+            <input placeholder="Onde você está?" />
+            <i class="ti ti-adjustments-horizontal" style="color:#fff"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ttl">Rating e avatar do Host</div>
+        <div class="frame-bg row" style="justify-content:space-between">
+          <span style="display:inline-flex;align-items:center;gap:5px">
+            <i class="ti ti-star-filled" style="color:var(--color-warning);font-size:15px"></i>
+            <b style="font-size:14px">4,93</b>
+            <span style="color:var(--text-secondary);font-size:13px">· 128 sessões</span>
+          </span>
+          <div style="position:relative;width:48px;height:48px">
+            <div style="width:48px;height:48px;border-radius:50%;background:var(--bg-surface-2);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:19px">M</div>
+            <div style="position:absolute;right:-2px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:var(--color-primary);display:flex;align-items:center;justify-content:center;border:2px solid var(--bg-surface)"><i class="ti ti-check" style="font-size:12px;color:#000"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ttl">Pin do mapa</div>
+        <div class="frame-bg row" style="gap:24px;justify-content:center;padding:24px">
+          <div style="text-align:center">
+            <span class="pin" style="background:var(--color-primary);box-shadow:0 0 0 5px rgba(0,212,106,.22)"><i class="ti ti-bolt" style="color:#000"></i></span>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:12px">Disponível</div>
+          </div>
+          <div style="text-align:center">
+            <span class="pin" style="background:var(--color-urgent);box-shadow:0 0 0 5px rgba(255,107,53,.25)"><i class="ti ti-bolt" style="color:#fff"></i></span>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:12px">Emergência</div>
+          </div>
+          <div style="text-align:center">
+            <span class="pin" style="background:var(--bg-surface-2)"><i class="ti ti-bolt" style="color:var(--text-tertiary)"></i></span>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:12px">Ocupado</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ttl">Bottom navigation</div>
+        <div class="frame-bg" style="padding:0;overflow:hidden">
+          <div style="display:flex;padding:12px 0">
+            <div class="navitem on"><i class="ti ti-map"></i><span>Mapa</span></div>
+            <div class="navitem"><i class="ti ti-list"></i><span>Lista</span></div>
+            <div class="navitem"><i class="ti ti-bolt"></i><span>Sessões</span></div>
+            <div class="navitem"><i class="ti ti-user"></i><span>Perfil</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ttl">Progresso de carregamento</div>
+        <div class="frame-bg" style="display:flex;justify-content:center;padding:24px">
+          <div style="position:relative;width:150px;height:150px">
+            <svg width="150" height="150" style="transform:rotate(-90deg)">
+              <circle cx="75" cy="75" r="64" fill="none" stroke="var(--bg-surface-2)" stroke-width="12"></circle>
+              <circle cx="75" cy="75" r="64" fill="none" stroke="var(--color-primary)" stroke-width="12" stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="113"></circle>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div class="t-num" style="font-size:34px">72<span style="font-size:16px">%</span></div>
+              <div style="font-size:11px;color:var(--text-secondary)">bateria</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="grid-column:span 2">
+        <div class="ttl">Card de carregador · Airbnb-style</div>
+        <div class="frame-bg" style="max-width:340px">
+          <div class="card">
+            <div style="position:relative;height:160px;background:radial-gradient(120% 120% at 70% 10%, #232a26 0%, #14171a 55%, #0c0e10 100%)">
+              <i class="ti ti-charging-pile" style="position:absolute;left:18px;bottom:16px;font-size:42px;color:var(--color-primary)"></i>
+              <span class="t-label" style="position:absolute;top:12px;left:12px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.35);padding:5px 9px;border-radius:6px">Garagem residencial</span>
+              <span class="badge badge-available" style="position:absolute;top:12px;right:12px">Disponível</span>
+            </div>
+            <div style="padding:14px 16px 16px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+                <span class="t-h2">Garagem Vila Madalena</span>
+                <span style="display:inline-flex;align-items:center;gap:4px;white-space:nowrap"><i class="ti ti-star-filled" style="color:var(--color-warning);font-size:13px"></i><b style="font-size:13px">4,93</b></span>
+              </div>
+              <div class="t-caption" style="color:var(--text-secondary);margin-top:4px">Host Marina · 0.4 km</div>
+              <div class="row" style="margin-top:12px">
+                <span class="badge badge-plug"><i class="ti ti-plug"></i>Tipo 2</span>
+                <span class="badge badge-plug"><i class="ti ti-bolt"></i>11 kW</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:4px;margin-top:14px">
+                <span class="t-num" style="font-size:22px">R$ 1,20</span>
+                <span class="t-caption" style="color:var(--text-secondary)">/ kWh</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<style>
+  .pin { width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:20px; }
+  .navitem { flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-tertiary);font-size:10px;font-weight:500; }
+  .navitem i { font-size:23px; }
+  .navitem.on { color:var(--color-primary); }
+  .navitem.on span { font-weight:600; }
+</style>
+
+<script>
+  const surfaces = [
+    ["bg-primary", "#0A0A0A", "Fundo principal"],
+    ["bg-surface", "#1C1C1C", "Cards e modais"],
+    ["bg-surface-2", "#2A2A2A", "Inputs e secundários"],
+    ["border", "#2A2A2A", "Linhas e divisores"],
+  ];
+  const action = [
+    ["color-primary", "#00D46A", "Ação principal · Pluge Green"],
+    ["color-primary-dark", "#00A854", "Hover / pressed"],
+    ["color-urgent", "#FF6B35", "Emergência e alertas"],
+    ["color-error", "#FF453A", "Erros"],
+    ["color-warning", "#FFB800", "Atenção e estrelas"],
+  ];
+  const text = [
+    ["text-primary", "#FFFFFF", "Texto principal"],
+    ["text-secondary", "#9E9E9E", "Texto secundário"],
+    ["text-tertiary", "#6C6C6C", "Texto terciário"],
+  ];
+  function renderColors(id, arr) {
+    document.getElementById(id).innerHTML = arr.map(([nm, hex, role]) => `
+      <div class="swatch">
+        <div class="chip" style="background:${hex};${hex.toUpperCase()==='#0A0A0A'||hex.toUpperCase()==='#1C1C1C'||hex.toUpperCase()==='#2A2A2A'?'border-bottom:1px solid #333':''}"></div>
+        <div class="meta"><div class="nm">${nm}</div><div class="hex">${hex}</div><div class="role">${role}</div></div>
+      </div>`).join("");
+  }
+  renderColors("surfaces", surfaces); renderColors("action", action); renderColors("text", text);
+
+  const types = [
+    ["Display", "32px · 700 · -1px", "display", "Reservar agora", 32, 700, "-1px"],
+    ["H1", "22px · 600", "h1", "Carregadores perto de você", 22, 600, "-0.3px"],
+    ["H2", "17px · 500", "h2", "Garagem Vila Madalena", 17, 500, "0"],
+    ["Body", "15px · 400", "body", "Disponível das 06:00 às 23:00 · Tipo 2 · 11 kW", 15, 400, "0"],
+    ["Caption", "13px · 400", "caption", "Host Marina · 0.4 km de distância", 13, 400, "0"],
+    ["Label", "11px · 500 · uppercase", "label", "ESPECIFICAÇÕES", 11, 500, "0.1em"],
+    ["Number", "Inter 700 · tabular", "num", "R$ 1.284,50", 32, 700, "-0.5px"],
+  ];
+  document.getElementById("type").innerHTML = types.map(([nm, spec, , txt, sz, wt, ls]) => `
+    <div class="typerow">
+      <div class="label"><b>${nm}</b></div>
+      <div class="spec">${spec}</div>
+      <div style="font-size:${sz}px;font-weight:${wt};letter-spacing:${ls};${nm==='Label'?'text-transform:uppercase':''};${nm==='Number'?'color:var(--color-primary);font-variant-numeric:tabular-nums':''};line-height:1.1">${txt}</div>
+    </div>`).join("");
+
+  const space = [4, 8, 16, 24, 32, 48, 64];
+  document.getElementById("spacing").innerHTML = space.map(v => `
+    <div class="unit" style="width:${Math.max(28, v)}px">
+      <div class="bar" style="height:${v}px"></div>
+      <div class="v">${v}</div>
+    </div>`).join("");
+
+  const radii = [["sm", 8, "Badges, inputs"], ["md", 12, "Cards internos"], ["lg", 16, "Cards principais"], ["pill", 999, "Botões e tags"], ["full", 36, "Frame do celular"]];
+  document.getElementById("radii").innerHTML = radii.map(([nm, v, role]) => `
+    <div>
+      <div class="r" style="border-radius:${Math.min(v,36)}px"><div class="demo" style="border-radius:${Math.max(0,Math.min(v,36)-4)}px"></div></div>
+      <div class="cap"><b>${nm} · ${v}px</b>${role}</div>
+    </div>`).join("");
+</script>
+</body>
+</html>

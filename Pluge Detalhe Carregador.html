@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pluge — Detalhe do carregador</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="app/pluge-tokens.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { font-family: var(--font); background: #050505; background-image: radial-gradient(80% 60% at 50% 0%, #141414 0%, #050505 70%); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+  #root { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .device-scaler { transform-origin: center center; }
+  .device { position: relative; width: 393px; height: 852px; flex: none; }
+  .device .bezel { position: absolute; inset: 0; border-radius: 54px; background: #0A0A0A; overflow: hidden; box-shadow: 0 0 0 11px #161616, 0 0 0 12px #2c2c2c, 0 40px 120px rgba(0,0,0,.6); }
+  .island { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 124px; height: 35px; border-radius: 20px; background: #000; z-index: 40; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg-primary); }
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3); z-index: 45; }
+
+  .content { flex: 1; overflow-y: auto; }
+  .content::-webkit-scrollbar { display: none; }
+
+  .photo { position: relative; height: 280px; background: radial-gradient(120% 120% at 70% 10%, #232a26 0%, #14171a 55%, #0c0e10 100%); overflow: hidden; }
+  .photo .pile { position: absolute; left: 20px; bottom: 18px; font-size: 50px; color: var(--color-primary); filter: drop-shadow(0 2px 10px rgba(0,0,0,.5)); }
+  .photo .lines { position: absolute; inset: 0; opacity: .5; }
+  .backbtn { position: absolute; top: 52px; left: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(10,10,10,.6); backdrop-filter: blur(8px); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; }
+  .backbtn i { font-size: 21px; color: #fff; }
+  .photo .lbl { position: absolute; top: 56px; left: 66px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.85); background: rgba(0,0,0,.4); padding: 6px 10px; border-radius: 7px; }
+  .photo .st { position: absolute; bottom: 16px; right: 16px; }
+
+  .body { padding: 20px 18px 22px; }
+  h1.title { font-size: 22px; font-weight: 700; letter-spacing: -.5px; margin: 0; }
+  .rating { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; margin-top: 10px; }
+  .rating i { color: var(--color-warning); font-size: 15px; }
+  .rating b { font-weight: 600; }
+  .rating span { color: var(--text-secondary); }
+  .addr { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-secondary); margin-top: 8px; }
+  .addr i { font-size: 15px; }
+
+  .hostrow { display: flex; align-items: center; gap: 13px; margin-top: 20px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .av { position: relative; width: 48px; height: 48px; flex: none; }
+  .av .c { width: 48px; height: 48px; border-radius: 50%; background: var(--bg-surface-2); display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 600; }
+  .av .tk { position: absolute; right: -2px; bottom: -2px; width: 19px; height: 19px; border-radius: 50%; background: var(--color-primary); display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-primary); }
+  .hostrow .nm { font-size: 16px; font-weight: 600; }
+  .hostrow .sb { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .msgbtn { margin-left: auto; width: 42px; height: 42px; border-radius: 50%; background: var(--bg-surface-2); border: none; display: flex; align-items: center; justify-content: center; }
+  .msgbtn i { font-size: 19px; color: #fff; }
+
+  .sectlbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: var(--text-tertiary); margin: 22px 0 12px; }
+  .specs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .spec { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; }
+  .spec i { font-size: 18px; color: var(--color-primary); }
+  .spec .k { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: var(--text-tertiary); margin-top: 10px; }
+  .spec .v { font-size: 15px; font-weight: 500; margin-top: 4px; }
+
+  .minimap { position: relative; height: 130px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); background: #1A2A20; }
+  .minimap .pin { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 38px; height: 38px; border-radius: 50%; background: var(--color-primary); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 6px rgba(0,212,106,.2); }
+
+  .footer { flex: none; padding: 14px 18px 22px; border-top: 1px solid var(--border); background: var(--bg-primary); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .footer .price .v { font-size: 24px; font-weight: 700; letter-spacing: -.5px; }
+  .footer .price .u { font-size: 13px; color: var(--text-secondary); }
+  .statusbar { height: 0; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="device-scaler" id="scaler">
+    <div class="device">
+      <div class="bezel">
+        <div class="island"></div>
+        <div class="screen">
+          <div class="content">
+            <div class="photo">
+              <svg class="lines" viewBox="0 0 400 280" preserveAspectRatio="none"><line x1="0" y1="210" x2="400" y2="196" stroke="rgba(255,255,255,.06)" stroke-width="1"></line><line x1="80" y1="280" x2="150" y2="80" stroke="rgba(255,255,255,.04)" stroke-width="1"></line><rect x="270" y="90" width="100" height="170" fill="rgba(255,255,255,.02)"></rect></svg>
+              <button class="backbtn" data-nav="back"><i class="ti ti-chevron-left"></i></button>
+              <span class="lbl">Garagem residencial</span>
+              <i class="ti ti-charging-pile pile"></i>
+              <span class="st badge badge-available">Disponível</span>
+            </div>
+            <div class="body">
+              <h1 class="title">Garagem da Renata · Cambuí</h1>
+              <div class="rating"><i class="ti ti-star-filled"></i><b>4,9</b><span>· 47 sessões</span></div>
+              <div class="addr"><i class="ti ti-map-pin"></i>Av. José de Souza Campos, 1.247 · Cambuí, Campinas</div>
+
+              <div class="hostrow">
+                <div class="av"><div class="c">R</div><div class="tk"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></div></div>
+                <div><div class="nm">Renata Oliveira</div><div class="sb">Host verificada · responde em ~5 min</div></div>
+                <button class="msgbtn"><i class="ti ti-message-2"></i></button>
+              </div>
+
+              <div class="sectlbl">Especificações</div>
+              <div class="specs">
+                <div class="spec"><i class="ti ti-plug"></i><div class="k">Tipo de plug</div><div class="v">Tipo 2</div></div>
+                <div class="spec"><i class="ti ti-bolt"></i><div class="k">Potência</div><div class="v">7,4 kW</div></div>
+                <div class="spec"><i class="ti ti-clock"></i><div class="k">Disponível</div><div class="v">Seg–Sex · 08–18h</div></div>
+                <div class="spec"><i class="ti ti-gauge"></i><div class="k">Tempo médio</div><div class="v">~3h20</div></div>
+              </div>
+
+              <div class="sectlbl">Localização</div>
+              <div class="minimap">
+                <svg width="100%" height="100%" viewBox="0 0 360 130" preserveAspectRatio="xMidYMid slice"><g stroke="#243A2C" stroke-width="8" stroke-linecap="round"><line x1="0" y1="50" x2="360" y2="44"></line><line x1="0" y1="100" x2="360" y2="106"></line><line x1="120" y1="0" x2="112" y2="130"></line><line x1="250" y1="0" x2="258" y2="130"></line></g></svg>
+                <div class="pin"><svg width="20" height="20" viewBox="0 0 24 24" fill="#000"><path d="M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H12z"></path></svg></div>
+              </div>
+            </div>
+          </div>
+          <div class="footer">
+            <div class="price"><span class="v">R$ 1,20</span><span class="u"> /kWh</span></div>
+            <button class="btn btn-primary btn-lg" data-nav="confirm" style="flex:1;max-width:200px"><i class="ti ti-bolt"></i>Reservar agora</button>
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var scaler = document.getElementById("scaler");
+    function fit() { var s = Math.min(1, (window.innerHeight - 24) / 852, (window.innerWidth - 24) / 393); scaler.style.transform = "scale(" + s + ")"; }
+    fit(); window.addEventListener("resize", fit);
+  })();
+</script>
+<script src="app/embed.js"></script>
+</body>
+</html>

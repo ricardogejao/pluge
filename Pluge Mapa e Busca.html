@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pluge — Mapa e busca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="app/pluge-tokens.css" />
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: var(--font);
+    background: #050505;
+    background-image: radial-gradient(80% 60% at 50% 0%, #141414 0%, #050505 70%);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  #root { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .device-scaler { transform-origin: center center; }
+
+  /* iPhone 14 Pro frame */
+  .device { position: relative; width: 393px; height: 852px; flex: none; }
+  .device .bezel {
+    position: absolute; inset: 0; border-radius: 54px; background: #0A0A0A;
+    overflow: hidden; box-shadow: 0 0 0 11px #161616, 0 0 0 12px #2c2c2c, 0 40px 120px rgba(0,0,0,.6);
+  }
+  .island { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 124px; height: 35px; border-radius: 20px; background: #000; z-index: 40; }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg-primary); }
+  .home-indicator { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.3); z-index: 45; }
+
+  /* ---- Search header (floats over map) ---- */
+  .header { position: absolute; top: 0; left: 0; right: 0; z-index: 20; padding: 56px 18px 14px;
+    background: none; pointer-events: none; }
+  .header > * { pointer-events: auto; }
+  .searchbar { display: flex; align-items: center; gap: 11px; background: var(--bg-surface);
+    border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px;
+    box-shadow: var(--shadow-pop); }
+  .searchbar i { font-size: 20px; color: var(--text-secondary); }
+  .searchbar .ph { flex: 1; color: var(--text-primary); font-size: 15px; }
+  input.ph { background: none; border: none; outline: none; font-family: var(--font); min-width: 0; }
+  input.ph::placeholder { color: var(--text-secondary); }
+  .searchbar .av { width: 26px; height: 26px; border-radius: 50%; background: var(--bg-surface-2);
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; }
+
+  .chips { display: flex; gap: 6px; margin-top: 8px; padding: 4px 16px 12px 0; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+    font-size: 12.5px; font-weight: 600; padding: 8px 11px; border-radius: 999px;
+    background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border);
+    box-shadow: 0 2px 10px rgba(0,0,0,.45); }
+  .chip.on { background: var(--color-primary); color: #000; border-color: var(--color-primary); }
+  .chip i { font-size: 15px; }
+
+  /* ---- Map ---- */
+  .map { position: relative; flex: 1; background: #0A0A0A; overflow: hidden; }
+  #leaflet { position: absolute; inset: 0; z-index: 0; }
+  .leaflet-container { background: #e8e0d8; font-family: var(--font); }
+  .leaflet-tile { filter: grayscale(1) url(#map-curve); }
+  .leaflet-div-icon { background: transparent; border: none; }
+  .leaflet-control-attribution { background: rgba(10,10,10,.55); color: var(--text-tertiary); font-size: 9px; }
+  .leaflet-control-attribution a { color: var(--text-secondary); }
+  .leaflet-popup-content-wrapper { background: transparent; box-shadow: none; border: none; padding: 0; }
+  .leaflet-popup-tip { display: none; }
+
+  /* ---- Price-pill markers (same look as the original pins) ---- */
+  .mk { display: inline-flex; align-items: center; gap: 5px; background: #fff; color: #0A0A0A;
+    font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 999px; white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0,0,0,.45); border: 1px solid rgba(0,0,0,.06); cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition: transform .16s cubic-bezier(.2,0,0,1), background .16s, color .16s; }
+  .mk i { font-size: 13px; color: var(--color-primary); }
+  .mk.busy { background: #2A2A2A; color: #9E9E9E; border-color: #3a3a3a; }
+  .mk.busy i { color: var(--text-tertiary); }
+  .mk.reserved { background: #2A2A2A; color: var(--color-warning); border-color: #3a3a3a; }
+  .mk.reserved i { color: var(--color-warning); }
+  .mk.available.active { background: var(--color-primary); color: #0A0A0A; transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 8px 22px rgba(0,212,106,.45); }
+  .mk.available.active i { color: #0A0A0A; }
+  .mk.busy.active { background: #0A0A0A; color: #fff; transform: translate(-50%, -50%) scale(1.1); }
+  .mk.reserved.active { background: #0A0A0A; color: var(--color-warning); transform: translate(-50%, -50%) scale(1.1); }
+
+  .map-recenter { position: absolute; right: 16px; z-index: 16;
+    width: 46px; height: 46px; border-radius: 50%; background: var(--bg-surface);
+    border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-pop); bottom: 168px; transition: bottom .42s cubic-bezier(.32,.72,0,1); }
+  .map-recenter i { font-size: 22px; color: #fff; }
+
+  /* ---- Floating charger card (opens on marker tap) ---- */
+  .charger-card { position: absolute; left: 12px; right: 12px; bottom: 18px; z-index: 30;
+    background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px;
+    padding: 16px; box-shadow: 0 18px 48px rgba(0,0,0,.62);
+    opacity: 0; pointer-events: none; }
+  .charger-card.show { opacity: 1; pointer-events: auto; }
+  .cc-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(20,20,20,.7); border: 1px solid var(--border); cursor: pointer; z-index: 3;
+    display: flex; align-items: center; justify-content: center; }
+  .cc-close svg { width: 14px; height: 14px; }
+  .cc-head { display: flex; align-items: center; gap: 13px; cursor: pointer; padding-right: 38px; }
+  .cc-av { position: relative; width: 50px; height: 50px; flex: none; }
+  .cc-av .circle { width: 50px; height: 50px; border-radius: 50%; background: var(--bg-surface-2);
+    display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 600; color: #fff; }
+  .cc-av .tick { position: absolute; right: -2px; bottom: -2px; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--color-primary); display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-surface); }
+  .cc-name { font-size: 17px; font-weight: 600; line-height: 1.25; }
+  .cc-meta { font-size: 13px; color: var(--text-secondary); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cc-rating { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; margin-top: 6px; white-space: nowrap; }
+  .cc-rating i { color: var(--color-warning); font-size: 14px; }
+  .cc-rating b { color: #fff; font-weight: 600; }
+  .cc-rating span { color: var(--text-secondary); }
+  .cc-body { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px;
+    margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .cc-price .lbl { font-size: 12px; color: var(--text-secondary); }
+  .cc-price .val { font-size: 24px; font-weight: 700; letter-spacing: -.5px; color: var(--color-primary);
+    font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .cc-price .val span { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+
+  /* ---- Draggable bottom sheet (peek → list) ---- */
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 25;
+    background: var(--bg-surface); border-top-left-radius: 22px; border-top-right-radius: 22px;
+    box-shadow: 0 -12px 40px rgba(0,0,0,.5); display: flex; flex-direction: column;
+    transition: transform .42s cubic-bezier(.32,.72,0,1); will-change: transform; }
+  .sheet-handle { flex: none; padding: 12px 18px 10px; cursor: grab; user-select: none; touch-action: none; }
+  .sheet.full { border-top-left-radius: 0; border-top-right-radius: 0; }
+  .sheet.dragging .sheet-handle { cursor: grabbing; }
+  .sheet-grip { width: 38px; height: 4px; border-radius: 2px; background: var(--bg-surface-2); margin: 0 auto 12px; }
+  .sheet-count { text-align: center; font-size: 15px; font-weight: 600; color: #fff; }
+  .sheet-count span { color: var(--text-secondary); font-weight: 500; }
+  .lempty { text-align: center; color: var(--text-secondary); font-size: 14px; padding: 40px 16px; line-height: 1.7; }
+  .lempty span { color: var(--text-tertiary); font-size: 13px; }
+  .sheet-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain;
+    padding: 6px 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .sheet-list::-webkit-scrollbar { display: none; }
+  .sheet-section { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--text-tertiary); margin: 8px 2px -4px; }
+  .sheet-section:first-child { margin-top: 2px; }
+
+  /* compact search rows — one card per line, info-first (photo de-emphasized) */
+  .lcard { display: flex; align-items: center; gap: 13px; background: var(--bg-surface-2);
+    border: 1px solid var(--border); border-radius: 14px; padding: 11px 13px; cursor: pointer; }
+  .lthumb { width: 52px; height: 52px; border-radius: 11px; flex: none; position: relative;
+    display: flex; align-items: center; justify-content: center; }
+  .lthumb i { font-size: 23px; }
+  .lthumb .sdot { position: absolute; top: -3px; right: -3px; width: 13px; height: 13px; border-radius: 50%;
+    border: 2px solid var(--bg-surface-2); }
+  .lthumb .sdot.available { background: var(--color-primary); }
+  .lthumb .sdot.reserved { background: var(--color-warning); }
+  .lthumb .sdot.busy { background: var(--color-error); }
+  .linfo { flex: 1; min-width: 0; }
+  .lrow1 { display: flex; align-items: center; gap: 8px; }
+  .lname { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lrate { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; color: var(--text-secondary); flex: none; }
+  .lrate i { color: var(--color-warning); font-size: 12px; }
+  .lmeta { font-size: 13px; color: var(--text-secondary); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lmeta .lstatus { font-weight: 600; }
+  .lmeta .lstatus.available { color: var(--color-primary); }
+  .lmeta .lstatus.reserved { color: var(--color-warning); }
+  .lmeta .lstatus.busy { color: var(--color-error); }
+  .lprice { text-align: right; flex: none; align-self: flex-start; padding-top: 1px; }
+  .lprice .v { font-size: 16px; font-weight: 700; letter-spacing: -.3px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lprice .u { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+
+  /* "Mapa" FAB — collapses the sheet back to the map */
+  .map-fab { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%) translateY(8px);
+    z-index: 28; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    background: #0A0A0A; color: #fff; border: 1px solid var(--border);
+    font-family: var(--font); font-size: 14px; font-weight: 700;
+    padding: 13px 22px; border-radius: 999px; box-shadow: 0 12px 32px rgba(0,0,0,.6);
+    opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s cubic-bezier(.2,0,0,1); }
+  .map-fab.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+  .map-fab i { font-size: 18px; }
+
+  /* ---- Bottom nav ---- */
+  .bottomnav { display: flex; border-top: 1px solid var(--border); background: var(--bg-primary);
+    padding: 9px 0 26px; flex: none; }
+  .bottomnav .item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-tertiary); }
+  .bottomnav .item i { font-size: 24px; }
+  .bottomnav .item span { font-size: 10px; font-weight: 500; }
+  .bottomnav .item.on { color: var(--color-primary); }
+  .bottomnav .item.on span { font-weight: 600; }
+</style>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="map-curve">
+      <feComponentTransfer>
+        <feFuncR type="gamma" amplitude="1" exponent="2.2" offset="0"/>
+        <feFuncG type="gamma" amplitude="1" exponent="2.2" offset="0"/>
+        <feFuncB type="gamma" amplitude="1" exponent="2.2" offset="0"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
+<div id="root">
+  <div class="device-scaler" id="scaler">
+    <div class="device">
+      <div class="bezel">
+        <div class="island"></div>
+        <div class="screen">
+
+          <!-- MAP -->
+          <div class="map" id="map">
+            <div id="leaflet"></div>
+
+            <div class="map-recenter" id="mapRecenter"><i class="ti ti-current-location"></i></div>
+
+            <!-- Floating charger card (marker tap) -->
+            <div class="charger-card" id="chargerCard">
+              <button class="cc-close" id="ccClose"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+              <div class="cc-head" id="ccHead" data-nav="detail">
+                <div class="cc-av">
+                  <div class="circle" id="ccInitial">R</div>
+                  <div class="tick" id="ccTick"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></div>
+                </div>
+                <div style="flex:1; min-width:0">
+                  <div class="cc-name" id="ccName">Garagem da Renata</div>
+                  <div class="cc-meta" id="ccMeta">0,2 km · Tipo 2 · 7,4 kW</div>
+                  <div class="cc-rating"><i class="ti ti-star-filled"></i><b id="ccRating">4,9</b><span id="ccSessions">· 47 sessões</span></div>
+                </div>
+                <span class="badge badge-available" id="ccBadge" style="flex:none; align-self:flex-end">Disponível</span>
+              </div>
+              <div class="cc-body">
+                <div class="cc-price">
+                  <div class="lbl">Preço</div>
+                  <div class="val" id="ccPrice">R$ 1,20<span> /kWh</span></div>
+                </div>
+                <button class="btn btn-primary" id="ccReserve" data-nav="up:detail" style="padding:14px 30px"><i class="ti ti-bolt"></i>Reservar</button>
+              </div>
+            </div>
+
+            <!-- Draggable bottom sheet -->
+            <div class="sheet" id="sheet">
+              <div class="sheet-handle" id="sheetHandle">
+                <div class="sheet-grip"></div>
+                <div class="sheet-count"><span id="sheetCount">11 carregadores em</span> Cambuí e região</div>
+              </div>
+              <div class="sheet-list" id="sheetList"></div>
+            </div>
+
+            <!-- Mapa FAB (shown in list mode) -->
+            <button class="map-fab" id="mapFab"><i class="ti ti-map"></i>Mapa</button>
+          </div>
+
+          <!-- HEADER (over map) -->
+          <div class="header">
+            <div class="searchbar">
+              <i class="ti ti-search"></i>
+              <input class="ph" id="searchInput" type="text" placeholder="Buscar por nome ou bairro" autocomplete="off" />
+              <i class="ti ti-x" id="searchClear" style="display:none; cursor:pointer"></i>
+              <span class="av">L</span>
+            </div>
+            <div class="chips">
+              <span class="chip" data-plug="Tipo 2">Tipo 2</span>
+              <span class="chip" data-plug="CCS">CCS2</span>
+              <span class="chip" data-plug="CHAdeMO">CHAdeMO</span>
+              <span class="chip" data-plug="Tipo 1">Tipo 1</span>
+              <span class="chip" data-plug="GB/T">GB/T</span>
+            </div>
+          </div>
+
+          <!-- BOTTOM NAV -->
+          <div class="bottomnav">
+            <div class="item on" data-nav="map"><i class="ti ti-search"></i><span>Busca</span></div>
+            <div class="item" data-nav="historico"><i class="ti ti-history"></i><span>Histórico</span></div>
+            <div class="item" data-nav="session"><i class="ti ti-bolt"></i><span>Sessões</span></div>
+            <div class="item" data-nav="profile"><i class="ti ti-user"></i><span>Perfil</span></div>
+          </div>
+
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var scaler = document.getElementById("scaler");
+    function fit() {
+      var s = Math.min(1, (window.innerHeight - 24) / 852, (window.innerWidth - 24) / 393);
+      scaler.style.transform = "scale(" + s + ")";
+    }
+    fit();
+    window.addEventListener("resize", fit);
+  })();
+</script>
+
+<script>
+  /* ---- Shared charger data (drives markers, list and the floating card) ---- */
+  var PLUGE_CENTER = [-22.9000, -47.0620];
+  var VIBE = {
+    garage:   { grad: "radial-gradient(120% 120% at 70% 10%, #232a26 0%, #14171a 55%, #0c0e10 100%)", pile: "var(--color-primary)" },
+    building: { grad: "radial-gradient(130% 120% at 80% 0%, #1f2530 0%, #131720 55%, #0a0c10 100%)",  pile: "#5b9bff" },
+    parking:  { grad: "radial-gradient(120% 120% at 40% 15%, #262226 0%, #15131a 55%, #0b0a0d 100%)", pile: "#8B5CF6" },
+    street:   { grad: "radial-gradient(120% 120% at 60% 10%, #20262a 0%, #12161a 55%, #0a0d0f 100%)", pile: "#FFB800" }
+  };
+  var DATA = [
+    { id:"c1",  place:"Garagem da Renata",   initial:"R", verified:true,  lat:-22.8987, lng:-47.0618, plug:"Tipo 2",   power:"7,4 kW", price:"R$ 1,20", status:"available", vibe:"garage",   rating:"4,9", sessions:"47" },
+    { id:"c2",  place:"Garagem da Patrícia", initial:"P", verified:true,  lat:-22.9001, lng:-47.0632, plug:"Tipo 2",   power:"7,4 kW", price:"R$ 1,15", status:"available", vibe:"garage",   rating:"4,9", sessions:"63" },
+    { id:"c3",  place:"Cobertura do Eduardo", initial:"E", verified:true, lat:-22.8975, lng:-47.0598, plug:"Tipo 2",   power:"7,4 kW", price:"R$ 1,20", status:"reserved",  vibe:"building", rating:"4,6", sessions:"21" },
+    { id:"c4",  place:"Garagem do Felipe",   initial:"F", verified:true,  lat:-22.9045, lng:-47.0672, plug:"Tipo 2",   power:"11 kW",  price:"R$ 1,30", status:"available", vibe:"garage",   rating:"4,8", sessions:"31" },
+    { id:"c5",  place:"Studio do Thiago",    initial:"T", verified:false, lat:-22.9067, lng:-47.0689, plug:"Tipo 1",   power:"3,7 kW", price:"R$ 0,95", status:"available", vibe:"street",   rating:"4,5", sessions:"7"  },
+    { id:"c6",  place:"Casa do Marcelo",     initial:"M", verified:true,  lat:-22.8912, lng:-47.0634, plug:"Tipo 2",   power:"7,4 kW", price:"R$ 1,20", status:"available", vibe:"garage",   rating:"4,7", sessions:"18" },
+    { id:"c7",  place:"Família Alves",       initial:"A", verified:true,  lat:-22.8934, lng:-47.0656, plug:"CCS",      power:"22 kW",  price:"R$ 1,45", status:"busy",      vibe:"parking",  rating:"4,8", sessions:"44" },
+    { id:"c8",  place:"Sobrado da Cris",     initial:"C", verified:true,  lat:-22.8856, lng:-47.0543, plug:"CCS",      power:"22 kW",  price:"R$ 1,40", status:"available", vibe:"garage",   rating:"5,0", sessions:"12" },
+    { id:"c9",  place:"Garagem Dupla",       initial:"G", verified:true,  lat:-22.8723, lng:-47.0412, plug:"Tipo 2",   power:"11 kW",  price:"R$ 1,25", status:"available", vibe:"parking",  rating:"4,7", sessions:"29" },
+    { id:"c10", place:"Cond. Ipê Verde",     initial:"I", verified:true,  lat:-22.8834, lng:-47.0234, plug:"Tipo 2",   power:"11 kW",  price:"R$ 1,10", status:"available", vibe:"building", rating:"4,6", sessions:"89" },
+    { id:"c11", place:"Vaga da Sônia",       initial:"S", verified:true,  lat:-22.9123, lng:-47.0456, plug:"CHAdeMO",  power:"50 kW",  price:"R$ 1,65", status:"available", vibe:"building", rating:"4,9", sessions:"37" }
+  ];
+  var CHARGERS = {};
+  // distance from the map centre (haversine) → used for the list ordering + meta
+  function distKm(lat, lng) {
+    var R = 6371, dLat = (lat - PLUGE_CENTER[0]) * Math.PI / 180, dLng = (lng - PLUGE_CENTER[1]) * Math.PI / 180;
+    var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(PLUGE_CENTER[0]*Math.PI/180)*Math.cos(lat*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+  DATA.forEach(function (d) { d.dist = distKm(d.lat, d.lng).toFixed(1).replace(".", ","); CHARGERS[d.id] = d; });
+  function statusBadge(s) {
+    if (s === "busy") return { cls: "badge-busy", txt: "Ocupado" };
+    if (s === "reserved") return { cls: "badge-reserved", txt: "Reservado" };
+    return { cls: "badge-available", txt: "Disponível" };
+  }
+</script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  /* ---- Floating charger card + compact list (driven by the shared data) ---- */
+  (function () {
+    var card = document.getElementById("chargerCard");
+    var head = document.getElementById("ccHead");
+    var reserve = document.getElementById("ccReserve");
+    var open = false, curId = null;
+    var EASE = "cubic-bezier(.32,.72,0,1)";
+
+    window.__plugeRenderList = function (items) {
+      var listEl = document.getElementById("sheetList");
+      var sorted = (items || DATA).slice().sort(function (a, b) {
+        return parseFloat(a.dist.replace(",", ".")) - parseFloat(b.dist.replace(",", "."));
+      });
+      if (!sorted.length) {
+        listEl.innerHTML = '<div class="lempty">Nenhum carregador encontrado<br><span>Ajuste a busca ou os filtros</span></div>';
+        return;
+      }
+      var html = "";
+      sorted.forEach(function (d) {
+        var v = VIBE[d.vibe], sb = statusBadge(d.status);
+        html +=
+          '<div class="lcard" data-nav="detail" data-charger="' + d.id + '">' +
+            '<div class="lthumb" style="background:' + v.grad + '">' +
+              '<i class="ti ti-charging-pile" style="color:' + v.pile + '"></i>' +
+              '<span class="sdot ' + d.status + '"></span>' +
+            '</div>' +
+            '<div class="linfo">' +
+              '<div class="lrow1"><span class="lname">' + d.place + '</span>' +
+                '<span class="lrate"><i class="ti ti-star-filled"></i>' + d.rating + '</span></div>' +
+              '<div class="lmeta"><span class="lstatus ' + d.status + '">' + sb.txt + '</span> · ' +
+                d.dist + ' km · ' + d.plug + ' · ' + d.power + '</div>' +
+            '</div>' +
+            '<div class="lprice"><div class="v">' + d.price + '</div><div class="u">/kWh</div></div>' +
+          '</div>';
+      });
+      listEl.innerHTML = html;
+    };
+    window.__plugeRenderList();
+
+    function populate(id) {
+      var c = CHARGERS[id]; if (!c) return;
+      document.getElementById("ccInitial").textContent = c.initial;
+      document.getElementById("ccTick").style.display = c.verified ? "" : "none";
+      document.getElementById("ccName").textContent = c.place;
+      document.getElementById("ccMeta").textContent = c.dist + " km · " + c.plug + " · " + c.power;
+      document.getElementById("ccRating").textContent = c.rating;
+      document.getElementById("ccSessions").textContent = "· " + c.sessions + " sessões";
+      var sb = statusBadge(c.status);
+      var badge = document.getElementById("ccBadge");
+      badge.textContent = sb.txt;
+      badge.className = "badge " + sb.cls;
+      badge.style.flex = "none";
+      document.getElementById("ccPrice").innerHTML = c.price + "<span> /kWh</span>";
+      var avail = c.status === "available";
+      reserve.className = "btn " + (avail ? "btn-primary" : "btn-disabled");
+      reserve.innerHTML = avail ? '<i class="ti ti-bolt"></i>Reservar' : (c.status === "reserved" ? "Reservado" : "Indisponível");
+      if (avail) { reserve.setAttribute("data-nav", "up:detail"); head.setAttribute("data-nav", "detail"); head.style.cursor = "pointer"; }
+      else { reserve.removeAttribute("data-nav"); head.removeAttribute("data-nav"); head.style.cursor = "default"; }
+      curId = id;
+      if (window.__plugeSetActiveMarker) window.__plugeSetActiveMarker(id);
+    }
+
+    function openCard(id) {
+      if (window.__plugeSetSheet) window.__plugeSetSheet(false, false); // collapse sheet under the card
+      populate(id);
+      card.classList.add("show");
+      if (card.animate) { try { card.animate([{ transform: "translateY(16px)" }, { transform: "translateY(0)" }], { duration: 360, easing: EASE }); } catch (e) {} }
+      open = true;
+    }
+    function closeCard() {
+      card.classList.remove("show");
+      card.style.transform = "";
+      if (window.__plugeSetActiveMarker) window.__plugeSetActiveMarker(null);
+      open = false;
+    }
+    window.__plugeOpenCard = openCard;
+    window.__plugeCloseCard = function () { if (open) closeCard(); };
+
+    document.getElementById("ccClose").addEventListener("click", function (e) { e.stopPropagation(); closeCard(); });
+  })();
+</script>
+
+<script>
+  /* ---- Search + plug filters → markers, list and count ---- */
+  (function () {
+    var input = document.getElementById("searchInput");
+    var clear = document.getElementById("searchClear");
+    var chips = [].slice.call(document.querySelectorAll(".chip[data-plug]"));
+    var countEl = document.getElementById("sheetCount");
+    var query = "", plugs = {};
+
+    function norm(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+    function matchesPlug(d) {
+      var keys = Object.keys(plugs).filter(function (k) { return plugs[k]; });
+      if (!keys.length) return true;
+      return keys.some(function (k) { return norm(d.plug).indexOf(norm(k)) !== -1; });
+    }
+    function matchesQuery(d) {
+      if (!query) return true;
+      return norm(d.place).indexOf(query) !== -1 || norm(d.plug).indexOf(query) !== -1;
+    }
+
+    function apply() {
+      var shown = DATA.filter(function (d) { return matchesPlug(d) && matchesQuery(d); });
+      var shownIds = {};
+      shown.forEach(function (d) { shownIds[d.id] = true; });
+      // markers
+      var markers = window.__plugeMarkers || {};
+      Object.keys(markers).forEach(function (id) {
+        var el = markers[id].getElement();
+        if (el) el.style.display = shownIds[id] ? "" : "none";
+      });
+      // list + count
+      if (window.__plugeRenderList) window.__plugeRenderList(shown);
+      if (countEl) countEl.textContent = shown.length + (shown.length === 1 ? " carregador em" : " carregadores em");
+    }
+    window.__plugeApplyFilter = apply;
+
+    input.addEventListener("input", function () {
+      query = norm(input.value.trim());
+      clear.style.display = input.value ? "" : "none";
+      apply();
+    });
+    clear.addEventListener("click", function () { input.value = ""; query = ""; clear.style.display = "none"; apply(); input.focus(); });
+    chips.forEach(function (c) {
+      c.addEventListener("click", function () {
+        var p = c.getAttribute("data-plug");
+        plugs[p] = !plugs[p];
+        c.classList.toggle("on", plugs[p]);
+        apply();
+      });
+    });
+  })();
+</script>
+
+<script>
+  /* ---- Real map: Leaflet + CartoDB Dark Matter ---- */
+  (function () {
+    if (!window.L) return;
+    var map = L.map("leaflet", { zoomControl: false, attributionControl: true })
+      .setView(PLUGE_CENTER, 14);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: "© OpenStreetMap contributors © CARTO",
+      subdomains: "abcd", maxZoom: 20,
+      updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 2
+    }).addTo(map);
+
+    var markerById = {};
+    DATA.forEach(function (d) {
+      var html = '<div class="mk ' + d.status + '" data-charger="' + d.id + '"><i class="ti ti-bolt"></i>' + d.price + '</div>';
+      var icon = L.divIcon({ html: html, className: "", iconSize: [0, 0], iconAnchor: [0, 0] });
+      var m = L.marker([d.lat, d.lng], { icon: icon, keyboard: false }).addTo(map);
+      m.on("click", function () { if (window.__plugeOpenCard) window.__plugeOpenCard(d.id); });
+      markerById[d.id] = m;
+    });
+
+    window.__plugeMarkers = markerById;
+
+    // highlight the active charger's marker
+    window.__plugeSetActiveMarker = function (id) {
+      Object.keys(markerById).forEach(function (k) {
+        var el = markerById[k].getElement();
+        if (!el) return;
+        var mk = el.querySelector(".mk");
+        if (mk) mk.classList.toggle("active", k === id);
+      });
+    };
+
+    // tap empty map → dismiss the open card
+    map.on("click", function () { if (window.__plugeCloseCard) window.__plugeCloseCard(); });
+
+    // recenter button
+    var recenter = document.getElementById("mapRecenter");
+    if (recenter) recenter.addEventListener("click", function () { map.setView(PLUGE_CENTER, 14, { animate: true }); });
+
+    // make sure Leaflet measures correctly after the scaler/layout settles
+    function fix() { map.invalidateSize(false); }
+    requestAnimationFrame(fix);
+    window.addEventListener("load", fix);
+    setTimeout(fix, 200);
+    setTimeout(fix, 600);
+    window.addEventListener("resize", fix);
+  })();
+</script>
+
+<script>
+  /* ---- Bottom sheet: peek ⇆ half ⇆ full (Airbnb architecture) ---- */
+  (function () {
+    var map = document.getElementById("map");
+    var sheet = document.getElementById("sheet");
+    var handle = document.getElementById("sheetHandle");
+    var list = document.getElementById("sheetList");
+    var fab = document.getElementById("mapFab");
+    var recenter = document.getElementById("mapRecenter");
+    var PEEK = 84;
+    var TOPGAP = 54;        // at full, the list covers the header → full-screen list (just below status bar)
+    var EMBED = new URLSearchParams(location.search).has("embed");
+    var NAV = EMBED ? 94 : 0; // clear the shell's floating navbar pill
+    var peekY = 0, halfY = 0, fullY = 0, state = "peek";
+
+    function layout() {
+      var mh = map.clientHeight || 772;
+      var h = mh - TOPGAP - NAV;
+      sheet.style.bottom = NAV + "px";
+      sheet.style.height = h + "px";
+      fullY = 0;
+      halfY = Math.max(0, Math.round(mh * 0.46 - TOPGAP));
+      peekY = h - (handle.offsetHeight || PEEK);
+      if (halfY > peekY) halfY = Math.round(peekY / 2);
+      applyState(state, false);
+    }
+    function yFor(s) { return s === "full" ? fullY : s === "half" ? halfY : peekY; }
+    function applyState(s, animate) {
+      state = s;
+      sheet.style.transition = animate === false ? "none" : "";
+      sheet.style.transform = "translateY(" + yFor(s) + "px)";
+      var full = s === "full";
+      sheet.classList.toggle("full", full);
+      fab.classList.toggle("show", full);
+      recenter.style.opacity = s === "peek" ? "" : "0";
+      recenter.style.pointerEvents = s === "peek" ? "" : "none";
+      if (s === "peek") list.scrollTop = 0;
+      if (animate === false) { void sheet.offsetWidth; sheet.style.transition = ""; }
+    }
+    window.__plugeSetSheet = function (expanded, animate) { applyState(expanded ? "full" : "peek", animate); };
+
+    var drag = false, startY = 0, base = 0, moved = false;
+    handle.addEventListener("pointerdown", function (e) {
+      drag = true; moved = false; startY = e.clientY; base = yFor(state);
+      sheet.style.transition = "none"; sheet.classList.add("dragging");
+      try { handle.setPointerCapture(e.pointerId); } catch (x) {}
+    });
+    handle.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      var f = map.getBoundingClientRect().width / map.offsetWidth || 1;
+      var dy = (e.clientY - startY) / f;
+      if (Math.abs(dy) > 4) moved = true;
+      var y = Math.max(fullY, Math.min(peekY, base + dy));
+      sheet.style.transform = "translateY(" + y + "px)";
+    });
+    function endDrag(e) {
+      if (!drag) return; drag = false; sheet.classList.remove("dragging");
+      sheet.style.transition = "";
+      if (!moved) {
+        var order = ["peek", "half", "full"];
+        applyState(order[(order.indexOf(state) + 1) % 3], true);
+        return;
+      }
+      var f = map.getBoundingClientRect().width / map.offsetWidth || 1;
+      var cur = base + (e.clientY - startY) / f;
+      var cands = [["full", fullY], ["half", halfY], ["peek", peekY]];
+      var best = cands.reduce(function (a, b) { return Math.abs(b[1] - cur) < Math.abs(a[1] - cur) ? b : a; });
+      applyState(best[0], true);
+    }
+    handle.addEventListener("pointerup", endDrag);
+    handle.addEventListener("pointercancel", endDrag);
+
+    fab.addEventListener("click", function () { applyState("peek", true); });
+
+    layout();
+    window.addEventListener("resize", layout);
+    requestAnimationFrame(layout);
+  })();
+</script>
+<script src="app/embed.js"></script>
+</body>
+</html>
