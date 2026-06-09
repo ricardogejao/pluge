@@ -24,12 +24,11 @@
   .photo { position: relative; height: 280px; background: radial-gradient(120% 120% at 70% 10%, #232a26 0%, #14171a 55%, #0c0e10 100%); overflow: hidden; }
   .photo img.photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; opacity: .9; }
   .photo .overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.35) 0%, rgba(0,0,0,.1) 50%, rgba(0,0,0,.55) 100%); }
-  .photo .pile { display: none; }
   .photo .lines { position: absolute; inset: 0; opacity: .5; }
   .backbtn { position: absolute; top: 52px; left: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(10,10,10,.6); backdrop-filter: blur(8px); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; }
   .backbtn i { font-size: 21px; color: #fff; }
-  .photo .lbl { position: absolute; top: 56px; left: 66px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.85); background: rgba(0,0,0,.4); padding: 6px 10px; border-radius: 7px; }
-  .photo .st { position: absolute; bottom: 16px; right: 16px; }
+  .photo .lbl { position: absolute; top: 56px; left: 66px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.85); background: rgba(0,0,0,.4); padding: 6px 10px; border-radius: 7px; z-index: 5; }
+  .photo .st { position: absolute; bottom: 16px; right: 16px; z-index: 5; }
 
   .body { padding: 20px 18px 22px; }
   h1.title { font-size: 22px; font-weight: 700; letter-spacing: -.5px; margin: 0; }
@@ -74,31 +73,30 @@
         <div class="screen">
           <div class="content">
             <div class="photo">
-              <img class="photo-img" src="images/charger-residencial.jpg" alt="Carregador" />
+              <img class="photo-img" id="photoImg" src="images/charger-residencial.jpg" alt="Carregador" />
               <div class="overlay"></div>
               <svg class="lines" viewBox="0 0 400 280" preserveAspectRatio="none"><line x1="0" y1="210" x2="400" y2="196" stroke="rgba(255,255,255,.06)" stroke-width="1"></line><line x1="80" y1="280" x2="150" y2="80" stroke="rgba(255,255,255,.04)" stroke-width="1"></line><rect x="270" y="90" width="100" height="170" fill="rgba(255,255,255,.02)"></rect></svg>
               <button class="backbtn" data-nav="back"><i class="ti ti-chevron-left"></i></button>
-              <span class="lbl">Garagem residencial</span>
-              <i class="ti ti-charging-pile pile"></i>
-              <span class="st badge badge-available">Disponível</span>
+              <span class="lbl" id="locationType">Garagem residencial</span>
+              <span class="st badge badge-available" id="statusBadge">Disponível</span>
             </div>
             <div class="body">
-              <h1 class="title">Garagem da Renata · Cambuí</h1>
-              <div class="rating"><i class="ti ti-star-filled"></i><b>4,9</b><span>· 47 sessões</span></div>
-              <div class="addr"><i class="ti ti-map-pin"></i>Av. José de Souza Campos, 1.247 · Cambuí, Campinas</div>
+              <h1 class="title" id="chargerTitle">Garagem da Renata · Cambuí</h1>
+              <div class="rating"><i class="ti ti-star-filled"></i><b id="ratingVal">4,9</b><span id="ratingCount">· 47 sessões</span></div>
+              <div class="addr"><i class="ti ti-map-pin"></i><span id="chargerAddr">Av. José de Souza Campos, 1.247 · Cambuí, Campinas</span></div>
 
               <div class="hostrow">
-                <div class="av"><div class="c">R</div><div class="tk"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></div></div>
-                <div><div class="nm">Renata Oliveira</div><div class="sb">Host verificada · responde em ~5 min</div></div>
+                <div class="av"><div class="c" id="hostInitial">R</div><div class="tk"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></div></div>
+                <div><div class="nm" id="hostName">Renata Oliveira</div><div class="sb">Host verificado · responde em ~5 min</div></div>
                 <button class="msgbtn"><i class="ti ti-message-2"></i></button>
               </div>
 
               <div class="sectlbl">Especificações</div>
               <div class="specs">
-                <div class="spec"><i class="ti ti-plug"></i><div class="k">Tipo de plug</div><div class="v">Tipo 2</div></div>
-                <div class="spec"><i class="ti ti-bolt"></i><div class="k">Potência</div><div class="v">7,4 kW</div></div>
-                <div class="spec"><i class="ti ti-clock"></i><div class="k">Disponível</div><div class="v">Seg–Sex · 08–18h</div></div>
-                <div class="spec"><i class="ti ti-gauge"></i><div class="k">Tempo médio</div><div class="v">~3h20</div></div>
+                <div class="spec"><i class="ti ti-plug"></i><div class="k">Tipo de plug</div><div class="v" id="specPlug">Tipo 2</div></div>
+                <div class="spec"><i class="ti ti-bolt"></i><div class="k">Potência</div><div class="v" id="specKw">7,4 kW</div></div>
+                <div class="spec"><i class="ti ti-clock"></i><div class="k">Disponível</div><div class="v" id="specHours">Seg–Sex · 08–18h</div></div>
+                <div class="spec"><i class="ti ti-gauge"></i><div class="k">Tempo médio</div><div class="v" id="specTime">~3h20</div></div>
               </div>
 
               <div class="sectlbl">Localização</div>
@@ -109,8 +107,8 @@
             </div>
           </div>
           <div class="footer">
-            <div class="price"><span class="v">R$ 1,20</span><span class="u"> /kWh</span></div>
-            <button class="btn btn-primary btn-lg" data-nav="confirm" style="flex:1;max-width:200px"><i class="ti ti-bolt"></i>Reservar agora</button>
+            <div class="price"><span class="v" id="chargerPrice">R$ 1,20</span><span class="u"> /kWh</span></div>
+            <button class="btn btn-primary btn-lg" id="reserveBtn" data-nav="confirm" style="flex:1;max-width:200px"><i class="ti ti-bolt"></i>Reservar agora</button>
           </div>
         </div>
       </div>
@@ -124,6 +122,55 @@
     function fit() { var s = Math.min(1, (window.innerHeight - 24) / 852, (window.innerWidth - 24) / 393); scaler.style.transform = "scale(" + s + ")"; }
     fit(); window.addEventListener("resize", fit);
   })();
+</script>
+<script>
+/* ── Charger data ── */
+var CHARGERS = {
+  c1: { title: "Garagem Vila Madalena", host: "Marina Silva",    initial: "M", plug: "Tipo 2",  kw: "11 kW",   hours: "06:00–23:00",  avgTime: "~2h30", rating: "4,93", sessions: 128, price: "R$ 1,20", address: "R. Harmonia, 248 · Vila Madalena", locationType: "Garagem residencial", status: "available", image: "images/charger-residencial.jpg" },
+  c2: { title: "Cobertura Pinheiros",   host: "Rafael Mendes",   initial: "R", plug: "CCS",     kw: "50 kW",   hours: "24 horas",     avgTime: "~45min", rating: "4,81", sessions: 76,  price: "R$ 1,85", address: "R. dos Pinheiros, 1102 · Pinheiros", locationType: "Prédio · vaga coberta", status: "available", image: "images/charger-predio.jpg" },
+  c3: { title: "Quintal Perdizes",      host: "Beatriz Costa",   initial: "B", plug: "Tipo 2",  kw: "7,4 kW",  hours: "07:00–22:00",  avgTime: "~3h20", rating: "4,67", sessions: 54,  price: "R$ 0,98", address: "R. Apiacás, 60 · Perdizes", locationType: "Quintal · acesso fácil", status: "busy",      image: "images/charger-externo.jpg" },
+  c4: { title: "Estac. Faria Lima",     host: "Diego Ferreira",  initial: "D", plug: "CHAdeMO", kw: "50 kW",   hours: "24 horas",     avgTime: "~50min", rating: "4,74", sessions: 91,  price: "R$ 2,10", address: "Av. Faria Lima, 3400 · Itaim", locationType: "Estacionamento privado", status: "reserved",  image: "images/charger-predio.jpg" },
+  c5: { title: "Casa Sumaré",           host: "Letícia Rocha",   initial: "L", plug: "Tipo 2",  kw: "11 kW",   hours: "08:00–20:00",  avgTime: "~2h15", rating: "5,00", sessions: 33,  price: "R$ 1,10", address: "R. Cardoso de Almeida, 880 · Sumaré", locationType: "Garagem residencial", status: "available", image: "images/charger-residencial.jpg" },
+  c6: { title: "Loft Higienópolis",     host: "André Santos",    initial: "A", plug: "CCS",     kw: "22 kW",   hours: "24 horas",     avgTime: "~1h20", rating: "4,88", sessions: 142, price: "R$ 1,55", address: "Av. Angélica, 1500 · Higienópolis", locationType: "Prédio · subsolo", status: "available", image: "images/charger-predio.jpg" },
+};
+
+var DEFAULT_ID = "c1";
+
+(function () {
+  var params = new URLSearchParams(location.search);
+  var id = params.get("charger") || DEFAULT_ID;
+  var d = CHARGERS[id] || CHARGERS[DEFAULT_ID];
+
+  document.getElementById("photoImg").src = d.image;
+  document.getElementById("locationType").textContent = d.locationType;
+  document.getElementById("chargerTitle").textContent = d.title;
+  document.getElementById("ratingVal").textContent = d.rating;
+  document.getElementById("ratingCount").textContent = "· " + d.sessions + " sessões";
+  document.getElementById("chargerAddr").textContent = d.address;
+  document.getElementById("hostInitial").textContent = d.initial;
+  document.getElementById("hostName").textContent = d.host;
+  document.getElementById("specPlug").textContent = d.plug;
+  document.getElementById("specKw").textContent = d.kw;
+  document.getElementById("specHours").textContent = d.hours;
+  document.getElementById("specTime").textContent = d.avgTime;
+  document.getElementById("chargerPrice").textContent = d.price;
+
+  // status badge
+  var badge = document.getElementById("statusBadge");
+  var STATUS_MAP = { available: ["badge-available", "Disponível"], busy: ["badge-busy", "Ocupado"], reserved: ["badge-reserved", "Reservado"] };
+  var s = STATUS_MAP[d.status] || STATUS_MAP["available"];
+  badge.className = "st badge " + s[0];
+  badge.textContent = s[1];
+
+  // disable reserve button if not available
+  if (d.status !== "available") {
+    var btn = document.getElementById("reserveBtn");
+    btn.disabled = true;
+    btn.style.opacity = "0.45";
+    btn.removeAttribute("data-nav");
+    btn.innerHTML = '<i class="ti ti-bolt"></i>' + (d.status === "busy" ? "Ocupado agora" : "Já reservado");
+  }
+})();
 </script>
 <script src="app/embed.js"></script>
 </body>

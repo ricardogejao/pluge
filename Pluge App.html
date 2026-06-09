@@ -135,7 +135,7 @@
   var animating = false;
   var layerCache = {}; // one persistent iframe per screen id → no reload on revisit
 
-  function url(id) { return encodeURI(SCREENS[id]) + "?embed=1"; }
+  function url(id, params) { return encodeURI(SCREENS[id]) + "?embed=1" + (params ? "&" + params : ""); }
 
   function prepareLayer(layer) {
     // reset to a clean, visible base state and strip any leftover scrim
@@ -146,14 +146,15 @@
     return layer;
   }
 
-  function makeLayer(id) {
-    if (layerCache[id]) return prepareLayer(layerCache[id]); // reuse → iframe stays loaded
+  function makeLayer(id, params) {
+    var cacheKey = id + (params ? "?" + params : "");
+    if (layerCache[cacheKey]) return prepareLayer(layerCache[cacheKey]); // reuse → iframe stays loaded
     var layer = document.createElement("div");
     layer.className = "layer";
     var f = document.createElement("iframe");
-    f.src = url(id);
+    f.src = url(id, params);
     layer.appendChild(f);
-    layerCache[id] = layer;
+    layerCache[cacheKey] = layer;
     return layer;
   }
 
@@ -179,9 +180,9 @@
   function show(id, opts) {
     opts = opts || {};
     if (animating) return;
-    if (current && current.id === id) { if (opts.toast) toast(opts.toast); return; }
+    if (current && current.id === id && !opts.params) { if (opts.toast) toast(opts.toast); return; }
     var type = opts.type || "push";
-    var incoming = makeLayer(id);
+    var incoming = makeLayer(id, opts.params || null);
     incoming.style.display = "";
     var old = current;
     updateNavbar(id);
@@ -265,7 +266,7 @@
   }
 
   var FADE_TARGETS = { map: 1, historico: 1, profile: 1 };
-  function navigate(target, fromNavbar) {
+  function navigate(target, fromNavbar, charger) {
     // parse "map|toast:Mensagem"
     var toastText = null;
     var bar = target.indexOf("|toast:");
@@ -281,6 +282,9 @@
       }
       return;
     }
+
+    // build charger URL params for detail screen
+    var navParams = (target === "detail" && charger) ? "charger=" + charger : null;
 
     // "up:detail" → modal-style transition from the bottom
     var upward = false;
@@ -298,7 +302,7 @@
     var type = upward ? "lift" : "push";
     if (ROOTS[target]) { navStack = [target]; navTrans = [type]; }
     else { navStack.push(target); navTrans.push(type); }
-    show(target, { type: type, toast: toastText });
+    show(target, { type: type, toast: toastText, params: navParams });
   }
 
   var toastTimer;
@@ -333,7 +337,7 @@
 
   window.addEventListener("message", function (e) {
     var d = e.data;
-    if (d && typeof d.plugeNav === "string") navigate(d.plugeNav);
+    if (d && typeof d.plugeNav === "string") navigate(d.plugeNav, false, d.charger || null);
   });
 
   // boot

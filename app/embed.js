@@ -36,13 +36,15 @@
     "html,body{background:#0A0A0A!important;}";
   document.head.appendChild(s);
 
-  function go(target) { try { parent.postMessage({ plugeNav: target }, "*"); } catch (e) {} }
+  function go(target, extra) { try { parent.postMessage(Object.assign({ plugeNav: target }, extra || {}), "*"); } catch (e) {} }
   window.PlugeGo = go;
 
   document.addEventListener("click", function (e) {
     var el = e.target.closest("[data-nav]");
     if (!el) return;
     e.preventDefault();
-    go(el.getAttribute("data-nav"));
+    var extra = {};
+    if (el.dataset.charger) extra.charger = el.dataset.charger;
+    go(el.getAttribute("data-nav"), extra);
   });
 })();
